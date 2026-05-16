@@ -1,78 +1,31 @@
-import type { Product, Quotation, QuotationItem, User } from '../store';
+import type { AppNotification, Product, Quotation, QuotationItem, User } from '../store';
+import { isSupabaseConfigured, supabase } from './supabaseClient';
 
-const DEFAULT_SUPABASE_URL = 'https://naecqhkaggepagnymzww.supabase.co';
-const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Mv04ClO1Q5Gjm83laJUhng_Pt_l6vEF';
+export { isSupabaseConfigured } from './supabaseClient';
 
-const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL) as string | undefined;
-const SUPABASE_PUBLISHABLE_KEY = (
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  DEFAULT_SUPABASE_PUBLISHABLE_KEY
-) as string | undefined;
-
-export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
-
-function assertSupabaseConfigured(message: string) {
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) throw new Error(message);
+function throwIfSupabaseError(error: { message?: string } | null) {
+  if (error) throw new Error(error.message || 'No se pudo completar la operación con Supabase.');
 }
 
-async function authRequest(path: string, body: Record<string, unknown>) {
-  assertSupabaseConfigured('Configura VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY para usar autenticación por correo.');
-
-  const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
-    method: 'POST',
-    headers: {
-      apikey: SUPABASE_PUBLISHABLE_KEY!,
-      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
+export async function requestEmailLoginCode(email: string) {
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false },
   });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'No se pudo completar la solicitud con Supabase.');
-  }
-
-  return response.json().catch(() => ({}));
-}
-
-export function requestEmailLoginCode(email: string) {
-  return authRequest('otp', { email, create_user: false });
+  throwIfSupabaseError(error);
 }
 
 export async function verifyEmailLoginCode(email: string, token: string) {
-  const result = await authRequest('verify', { email, token, type: 'email' });
-  return result as { user?: { email?: string } };
+  const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+  throwIfSupabaseError(error);
+  return data as { user?: { email?: string } };
 }
 
-export function requestPasswordRecovery(email: string) {
-  return authRequest('recover', {
-    email,
-    redirect_to: `${window.location.origin}/`,
+export async function requestPasswordRecovery(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/`,
   });
-}
-
-async function restRequest<T>(table: string, query = 'select=*', init: RequestInit = {}): Promise<T> {
-  assertSupabaseConfigured('Configura VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY para conectar la base de datos.');
-
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
-    ...init,
-    headers: {
-      apikey: SUPABASE_PUBLISHABLE_KEY!,
-      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-      ...(init.headers || {}),
-    },
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'No se pudo consultar Supabase.');
-  }
-
-  return response.json().catch(() => ({} as T));
+  throwIfSupabaseError(error);
 }
 
 export interface SupabaseProductRow {
@@ -122,6 +75,14 @@ interface SupabaseQuotationItemRow {
   description: string;
   quantity: number;
   unit_price: number;
+}
+
+interface SupabaseNotificationRow {
+  id: string;
+  type: AppNotification['type'];
+  message: string;
+  date: string;
+  read: boolean;
 }
 
 const productToRow = (product: Product): SupabaseProductRow => ({
@@ -223,76 +184,94 @@ const quotationItemFromRow = (row: SupabaseQuotationItemRow): QuotationItem => (
   unitPrice: Number(row.unit_price),
 });
 
-export function fetchProductsFromSupabase() {
-  return restRequest<SupabaseProductRow[]>('products', 'select=*&order=code.asc');
+const notificationToRow = (notification: AppNotification): SupabaseNotificationRow => ({
+  id: notification.id,
+  type: notification.type,
+  message: notification.message,
+  date: notification.date,
+  read: notification.read,
+});
+
+const notificationFromRow = (row: SupabaseNotificationRow): AppNotification => ({
+  id: row.id,
+  type: row.type,
+  message: row.message,
+  date: row.date,
+  read: row.read,
+});
+
+export async function fetchProductsFromSupabase() {
+  const { data, error } = await supabase.from('products').select('*').order('code', { ascending: true });
+  throwIfSupabaseError(error);
+  return (data ?? []) as SupabaseProductRow[];
 }
 
-export function saveProductToSupabase(product: Product) {
-  return restRequest<SupabaseProductRow[]>('products', 'on_conflict=id', {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify(productToRow(product)),
-  });
+export async function saveProductToSupabase(product: Product) {
+  const { data, error } = await supabase
+    .from('products')
+    .upsert(productToRow(product), { onConflict: 'id' })
+    .select();
+  throwIfSupabaseError(error);
+  return (data ?? []) as SupabaseProductRow[];
 }
 
-export function updateProductInSupabase(id: string, updates: Partial<Product>) {
-  return restRequest<SupabaseProductRow[]>('products', `id=eq.${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(productToRow({
-      id,
-      code: updates.code ?? '',
-      name: updates.name ?? '',
-      category: updates.category ?? '',
-      price: updates.price ?? 0,
-      presentation: updates.presentation ?? '',
-      unitsPerPack: updates.unitsPerPack ?? 0,
-      stock: updates.stock ?? 0,
-      available: updates.available ?? true,
-      imageUrl: updates.imageUrl,
-    })),
-  });
+export async function deleteProductFromSupabase(id: string) {
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  throwIfSupabaseError(error);
 }
 
-export function deleteProductFromSupabase(id: string) {
-  return restRequest<unknown>('products', `id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+export async function fetchProfilesFromSupabase() {
+  const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: true });
+  throwIfSupabaseError(error);
+  return (data ?? []) as SupabaseProfileRow[];
 }
 
-export function fetchProfilesFromSupabase() {
-  return restRequest<SupabaseProfileRow[]>('profiles', 'select=*&order=created_at.asc');
-}
-
-export function saveProfileToSupabase(user: User) {
-  return restRequest<SupabaseProfileRow[]>('profiles', 'on_conflict=email', {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify(profileToRow(user)),
-  });
+export async function saveProfileToSupabase(user: User) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert(profileToRow(user), { onConflict: 'email' })
+    .select();
+  throwIfSupabaseError(error);
+  return (data ?? []) as SupabaseProfileRow[];
 }
 
 export async function fetchQuotationsFromSupabase() {
-  const [quotes, items] = await Promise.all([
-    restRequest<SupabaseQuotationRow[]>('quotations', 'select=*&order=created_at.desc'),
-    restRequest<SupabaseQuotationItemRow[]>('quotation_items', 'select=*'),
+  const [{ data: quotes, error: quotesError }, { data: items, error: itemsError }] = await Promise.all([
+    supabase.from('quotations').select('*').order('created_at', { ascending: false }),
+    supabase.from('quotation_items').select('*'),
   ]);
-  return quotes.map(quote => quotationFromRow(quote, items.filter(item => item.quotation_id === quote.id).map(quotationItemFromRow)));
+  throwIfSupabaseError(quotesError);
+  throwIfSupabaseError(itemsError);
+  const quoteRows = (quotes ?? []) as SupabaseQuotationRow[];
+  const itemRows = (items ?? []) as SupabaseQuotationItemRow[];
+  return quoteRows.map(quote => quotationFromRow(
+    quote,
+    itemRows.filter(item => item.quotation_id === quote.id).map(quotationItemFromRow),
+  ));
 }
 
 export async function saveQuotationToSupabase(quotation: Quotation) {
-  await restRequest<SupabaseQuotationRow[]>('quotations', 'on_conflict=id', {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify(quotationToRow(quotation)),
-  });
-  await restRequest<unknown>('quotation_items', `quotation_id=eq.${encodeURIComponent(quotation.id)}`, { method: 'DELETE' });
+  const { error: quoteError } = await supabase
+    .from('quotations')
+    .upsert(quotationToRow(quotation), { onConflict: 'id' })
+    .select();
+  throwIfSupabaseError(quoteError);
+
+  const { error: deleteError } = await supabase
+    .from('quotation_items')
+    .delete()
+    .eq('quotation_id', quotation.id);
+  throwIfSupabaseError(deleteError);
+
   if (quotation.items.length > 0) {
-    await restRequest<SupabaseQuotationItemRow[]>('quotation_items', '', {
-      method: 'POST',
-      body: JSON.stringify(quotation.items.map(item => quotationItemToRow(quotation.id, item))),
-    });
+    const { error: itemsError } = await supabase
+      .from('quotation_items')
+      .insert(quotation.items.map(item => quotationItemToRow(quotation.id, item)));
+    throwIfSupabaseError(itemsError);
   }
 }
 
-export function updateQuotationInSupabase(id: string, updates: Partial<Quotation>) {
+export async function updateQuotationInSupabase(id: string, updates: Partial<Quotation>) {
   const row: Partial<SupabaseQuotationRow> = {};
   if (updates.clientName !== undefined) row.client_name = updates.clientName;
   if (updates.clientCedula !== undefined) row.client_cedula = updates.clientCedula;
@@ -302,12 +281,48 @@ export function updateQuotationInSupabase(id: string, updates: Partial<Quotation
   if (updates.discount !== undefined) row.discount = updates.discount;
   if (updates.finalTotal !== undefined) row.final_total = updates.finalTotal;
   if (updates.status !== undefined) row.status = updates.status;
-  return restRequest<SupabaseQuotationRow[]>('quotations', `id=eq.${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(row),
-  });
+
+  const { data, error } = await supabase.from('quotations').update(row).eq('id', id).select();
+  throwIfSupabaseError(error);
+  return (data ?? []) as SupabaseQuotationRow[];
 }
 
-export function deleteQuotationFromSupabase(id: string) {
-  return restRequest<unknown>('quotations', `id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+export async function deleteQuotationFromSupabase(id: string) {
+  const { error } = await supabase.from('quotations').delete().eq('id', id);
+  throwIfSupabaseError(error);
+}
+
+export async function fetchNotificationsFromSupabase() {
+  const { data, error } = await supabase.from('notifications').select('*').order('date', { ascending: false });
+  throwIfSupabaseError(error);
+  return ((data ?? []) as SupabaseNotificationRow[]).map(notificationFromRow);
+}
+
+export async function saveNotificationToSupabase(notification: AppNotification) {
+  const { data, error } = await supabase
+    .from('notifications')
+    .upsert(notificationToRow(notification), { onConflict: 'id' })
+    .select();
+  throwIfSupabaseError(error);
+  return ((data ?? []) as SupabaseNotificationRow[]).map(notificationFromRow);
+}
+
+export async function markNotificationReadInSupabase(id: string) {
+  const { data, error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('id', id)
+    .select();
+  throwIfSupabaseError(error);
+  return ((data ?? []) as SupabaseNotificationRow[]).map(notificationFromRow);
+}
+
+export async function markAllNotificationsReadInSupabase() {
+  const { data, error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('read', false)
+    .select();
+  throwIfSupabaseError(error);
+  return ((data ?? []) as SupabaseNotificationRow[]).map(notificationFromRow);
 }

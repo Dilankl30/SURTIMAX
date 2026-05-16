@@ -4,8 +4,15 @@
 
 create extension if not exists pgcrypto;
 
-create table if not exists public.profiles (
-  id uuid primary key default gen_random_uuid(),
+drop table if exists public.password_reset_requests cascade;
+drop table if exists public.notifications cascade;
+drop table if exists public.quotation_items cascade;
+drop table if exists public.quotations cascade;
+drop table if exists public.products cascade;
+drop table if exists public.profiles cascade;
+
+create table public.profiles (
+  id text primary key default gen_random_uuid()::text,
   name text not null,
   cedula text not null default '',
   address text not null default '',
@@ -15,7 +22,7 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
-create table if not exists public.products (
+create table public.products (
   id text primary key,
   code text not null unique,
   name text not null,
@@ -29,7 +36,7 @@ create table if not exists public.products (
   created_at timestamptz not null default now()
 );
 
-create table if not exists public.quotations (
+create table public.quotations (
   id text primary key,
   number text not null unique,
   date date not null default current_date,
@@ -48,8 +55,8 @@ create table if not exists public.quotations (
   created_at timestamptz not null default now()
 );
 
-create table if not exists public.quotation_items (
-  id uuid primary key default gen_random_uuid(),
+create table public.quotation_items (
+  id text primary key default gen_random_uuid()::text,
   quotation_id text not null references public.quotations(id) on delete cascade,
   code text not null,
   description text not null,
@@ -57,7 +64,7 @@ create table if not exists public.quotation_items (
   unit_price numeric(12,2) not null default 0
 );
 
-create table if not exists public.notifications (
+create table public.notifications (
   id text primary key,
   type text not null,
   message text not null,
@@ -65,21 +72,9 @@ create table if not exists public.notifications (
   read boolean not null default false
 );
 
-create table if not exists public.password_reset_requests (
-  id uuid primary key default gen_random_uuid(),
-  email text not null,
-  created_at timestamptz not null default now(),
-  used_at timestamptz
-);
-
-truncate table public.notifications restart identity cascade;
-truncate table public.quotation_items restart identity cascade;
-truncate table public.quotations restart identity cascade;
-truncate table public.products restart identity cascade;
-truncate table public.profiles restart identity cascade;
 
 insert into public.profiles (id, name, cedula, address, phone, email, is_admin)
-values ('00000000-0000-0000-0000-000000000001', 'Administrador SURTIMAX', '2200123456001', 'Quito, Ecuador', '0989961041', 'admin@surtimax.com', true);
+values ('admin', 'Administrador SURTIMAX', '2200123456001', 'Quito, Ecuador', '0989961041', 'admin@surtimax.com', true);
 
 insert into public.products (id, code, name, category, price, presentation, units_per_pack, stock, available, image_url)
 values

@@ -1,5 +1,25 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { deleteProductFromSupabase, deleteQuotationFromSupabase, fetchProductsFromSupabase, fetchProfilesFromSupabase, fetchQuotationsFromSupabase, isSupabaseConfigured, productFromRow, profileFromRow, requestEmailLoginCode, requestPasswordRecovery, saveProductToSupabase, saveProfileToSupabase, saveQuotationToSupabase, updateQuotationInSupabase, verifyEmailLoginCode } from './lib/supabase';
+import {
+  deleteProductFromSupabase,
+  deleteQuotationFromSupabase,
+  fetchNotificationsFromSupabase,
+  fetchProductsFromSupabase,
+  fetchProfilesFromSupabase,
+  fetchQuotationsFromSupabase,
+  isSupabaseConfigured,
+  markAllNotificationsReadInSupabase,
+  markNotificationReadInSupabase,
+  productFromRow,
+  profileFromRow,
+  requestEmailLoginCode,
+  requestPasswordRecovery,
+  saveNotificationToSupabase,
+  saveProductToSupabase,
+  saveProfileToSupabase,
+  saveQuotationToSupabase,
+  updateQuotationInSupabase,
+  verifyEmailLoginCode,
+} from './lib/supabase';
 
 export type ViewType =
   | 'catalog'
@@ -200,6 +220,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fetchQuotationsFromSupabase()
       .then(remoteQuotes => { if (remoteQuotes.length) setQuotations(remoteQuotes); })
       .catch(error => console.warn('No se pudieron cargar cotizaciones desde Supabase', error));
+    fetchNotificationsFromSupabase()
+      .then(remoteNotifications => { if (remoteNotifications.length) setNotifications(remoteNotifications); })
+      .catch(error => console.warn('No se pudieron cargar notificaciones desde Supabase', error));
   }, []);
 
   useEffect(() => {
@@ -316,13 +339,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setQuotations(prev => [...prev, newQuote]);
     if (isSupabaseConfigured) saveQuotationToSupabase(newQuote).catch(error => console.warn('No se pudo guardar la cotización en Supabase', error));
     setSelectedQuotationId(newQuote.id);
-    setNotifications(prev => [{
+    const notification: AppNotification = {
       id: `n${Date.now()}`,
       type: 'new-quote',
       message: `Nueva cotización de ${quoteClient.clientName} (#${newQuote.number})`,
       date: newQuote.date,
       read: false,
-    }, ...prev]);
+    };
+    setNotifications(prev => [notification, ...prev]);
+    if (isSupabaseConfigured) saveNotificationToSupabase(notification).catch(error => console.warn('No se pudo guardar la notificación en Supabase', error));
 
     clearCart();
     setView('quote-detail');
@@ -340,10 +365,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const markNotificationRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    if (isSupabaseConfigured) markNotificationReadInSupabase(id).catch(error => console.warn('No se pudo marcar la notificación en Supabase', error));
   }, []);
 
   const clearNotifications = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    if (isSupabaseConfigured) markAllNotificationsReadInSupabase().catch(error => console.warn('No se pudieron limpiar las notificaciones en Supabase', error));
   }, []);
 
   return (
