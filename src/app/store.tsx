@@ -52,6 +52,7 @@ export interface Quotation {
   clientCedula: string;
   clientAddress: string;
   clientPhone: string;
+  clientEmail?: string;
   items: QuotationItem[];
   totalCotizado: number;
   subtotal: number;
@@ -60,6 +61,8 @@ export interface Quotation {
   finalTotal: number;
   status: 'pending' | 'delivered';
 }
+
+export type QuotationClientData = Pick<Quotation, 'clientName' | 'clientCedula' | 'clientAddress' | 'clientPhone' | 'clientEmail'>;
 
 export interface AppNotification {
   id: string;
@@ -167,7 +170,7 @@ interface AppContextType {
   authOpen: boolean;
   setAuthOpen: (open: boolean) => void;
   quotations: Quotation[];
-  createQuotation: (items: QuotationItem[], discount?: number) => void;
+  createQuotation: (items: QuotationItem[], discount?: number, clientData?: QuotationClientData) => void;
   updateQuotation: (id: string, updates: Partial<Quotation>) => void;
   deleteQuotation: (id: string) => void;
   notifications: AppNotification[];
@@ -237,7 +240,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => setCart([]), []);
 
-  const createQuotation = useCallback((items: QuotationItem[], discount = 0) => {
+  const createQuotation = useCallback((items: QuotationItem[], discount = 0, clientData?: QuotationClientData) => {
     if (!currentUser) return;
     const totalCotizado = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
     const subtotal = totalCotizado / 1.15;
@@ -246,15 +249,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const month = new Date().toISOString().slice(0, 7).replace('-', '');
     const num = String(quotations.length + 1).padStart(3, '0');
 
-    const newQuote: Quotation = {
-      id: `q${Date.now()}`,
-      number: `COT-${month}-${num}`,
-      date: new Date().toISOString().slice(0, 10),
-      clientId: currentUser.id,
+    const quoteClient = clientData ?? {
       clientName: currentUser.name,
       clientCedula: currentUser.cedula,
       clientAddress: currentUser.address,
       clientPhone: currentUser.phone,
+      clientEmail: currentUser.email,
+    };
+
+    const newQuote: Quotation = {
+      id: `q${Date.now()}`,
+      number: `COT-${month}-${num}`,
+      date: new Date().toISOString().slice(0, 10),
+      clientId: clientData ? `physical-${Date.now()}` : currentUser.id,
+      clientName: quoteClient.clientName,
+      clientCedula: quoteClient.clientCedula,
+      clientAddress: quoteClient.clientAddress,
+      clientPhone: quoteClient.clientPhone,
+      clientEmail: quoteClient.clientEmail,
       items, totalCotizado, subtotal, iva, discount, finalTotal,
       status: 'pending',
     };
@@ -264,7 +276,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setNotifications(prev => [{
       id: `n${Date.now()}`,
       type: 'new-quote',
-      message: `Nueva cotización de ${currentUser.name} (#${newQuote.number})`,
+      message: `Nueva cotización de ${quoteClient.clientName} (#${newQuote.number})`,
       date: newQuote.date,
       read: false,
     }, ...prev]);

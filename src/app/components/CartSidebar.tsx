@@ -1,9 +1,21 @@
-import { X, Plus, Minus, Trash2, ShoppingBag, MessageCircle, Tag } from 'lucide-react';
+import { useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { X, Plus, Minus, Trash2, ShoppingBag, MessageCircle, Tag, User, CreditCard, MapPin, Phone, Mail } from 'lucide-react';
 import { useStore } from '../store';
-import type { Product } from '../store';
+import type { Product, QuotationClientData } from '../store';
+
+const emptyPhysicalClient: QuotationClientData = {
+  clientName: '',
+  clientCedula: '',
+  clientAddress: '',
+  clientPhone: '',
+  clientEmail: '',
+};
 
 export function CartSidebar() {
   const { cart, cartOpen, setCartOpen, products, updateCartQuantity, removeFromCart, currentUser, setAuthOpen, createQuotation } = useStore();
+  const [physicalClient, setPhysicalClient] = useState<QuotationClientData>(emptyPhysicalClient);
+  const [clientError, setClientError] = useState('');
 
   const cartItems = cart.map(item => ({
     ...item,
@@ -14,10 +26,25 @@ export function CartSidebar() {
   const subtotal = total / 1.15;
   const iva = total - subtotal;
 
+  const handlePhysicalClientChange = (field: keyof QuotationClientData, value: string) => {
+    setPhysicalClient(prev => ({ ...prev, [field]: value }));
+    if (clientError) setClientError('');
+  };
+
+  const validatePhysicalClient = () => {
+    if (!currentUser?.isAdmin) return true;
+    const requiredFields: Array<keyof QuotationClientData> = ['clientName', 'clientCedula', 'clientAddress', 'clientPhone', 'clientEmail'];
+    return requiredFields.every(field => String(physicalClient[field] ?? '').trim());
+  };
+
   const handleQuote = () => {
     if (!currentUser) {
       setCartOpen(false);
       setAuthOpen(true);
+      return;
+    }
+    if (!validatePhysicalClient()) {
+      setClientError('Completa todos los datos del cliente físico para generar la cotización.');
       return;
     }
     const items = cartItems.map(i => ({
@@ -26,7 +53,14 @@ export function CartSidebar() {
       quantity: i.quantity,
       unitPrice: i.product.price,
     }));
-    createQuotation(items);
+    createQuotation(items, 0, currentUser.isAdmin ? {
+      clientName: physicalClient.clientName.trim(),
+      clientCedula: physicalClient.clientCedula.trim(),
+      clientAddress: physicalClient.clientAddress.trim(),
+      clientPhone: physicalClient.clientPhone.trim(),
+      clientEmail: physicalClient.clientEmail?.trim(),
+    } : undefined);
+    setPhysicalClient(emptyPhysicalClient);
     setCartOpen(false);
   };
 
@@ -112,11 +146,41 @@ export function CartSidebar() {
               </div>
             )}
 
+            {currentUser?.isAdmin && (
+              <div style={{ backgroundColor: '#F8FAFE', border: '1px solid #D0E8FF', borderRadius: 12, padding: '12px', marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#0D47A1', marginBottom: 10 }}>
+                  Datos del cliente físico
+                </div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <ClientField label="Nombre completo / Razón social *" icon={<User size={13} />}>
+                    <input value={physicalClient.clientName} onChange={e => handlePhysicalClientChange('clientName', e.target.value)} placeholder="Juan Carlos Pérez" style={clientInput} />
+                  </ClientField>
+                  <ClientField label="Cédula / RUC *" icon={<CreditCard size={13} />}>
+                    <input value={physicalClient.clientCedula} onChange={e => handlePhysicalClientChange('clientCedula', e.target.value)} placeholder="1712345678" style={clientInput} />
+                  </ClientField>
+                  <ClientField label="Dirección *" icon={<MapPin size={13} />}>
+                    <input value={physicalClient.clientAddress} onChange={e => handlePhysicalClientChange('clientAddress', e.target.value)} placeholder="Av. 10 de Agosto 123, Quito" style={clientInput} />
+                  </ClientField>
+                  <ClientField label="Teléfono *" icon={<Phone size={13} />}>
+                    <input value={physicalClient.clientPhone} onChange={e => handlePhysicalClientChange('clientPhone', e.target.value)} placeholder="0991234567" style={clientInput} />
+                  </ClientField>
+                  <ClientField label="Correo electrónico *" icon={<Mail size={13} />}>
+                    <input value={physicalClient.clientEmail ?? ''} onChange={e => handlePhysicalClientChange('clientEmail', e.target.value)} type="email" placeholder="correo@ejemplo.com" style={clientInput} />
+                  </ClientField>
+                </div>
+                {clientError && (
+                  <div style={{ backgroundColor: '#FFEBEE', border: '1px solid #FFCDD2', color: '#C62828', borderRadius: 8, padding: '8px 10px', marginTop: 10, fontSize: 12 }}>
+                    ⚠️ {clientError}
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               onClick={handleQuote}
               style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #0D47A1, #1976D2)', color: 'white', cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: '0 4px 16px rgba(13,71,161,0.3)', marginBottom: 10 }}
             >
-              {currentUser ? '📋 Generar Cotización' : '🔐 Registrarse y Cotizar'}
+              {currentUser?.isAdmin ? '📋 Generar Cotización para Cliente' : currentUser ? '📋 Generar Cotización' : '🔐 Registrarse y Cotizar'}
             </button>
 
             <a
@@ -132,3 +196,24 @@ export function CartSidebar() {
     </>
   );
 }
+
+function ClientField({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
+  return (
+    <label style={{ display: 'grid', gap: 5 }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: '#455A64', textTransform: 'uppercase', letterSpacing: 0.2 }}>
+        <span style={{ color: '#1976D2' }}>{icon}</span> {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+const clientInput: CSSProperties = {
+  width: '100%',
+  boxSizing: 'border-box',
+  padding: '9px 10px',
+  border: '1px solid #BBDEFB',
+  borderRadius: 8,
+  fontSize: 13,
+  outline: 'none',
+};

@@ -30,7 +30,7 @@ export function Header() {
           </button>
 
           {/* Desktop Nav */}
-          <nav style={{ display: 'flex', gap: 4, alignItems: 'center', flex: 1, justifyContent: 'center' }} className="hidden md:flex">
+          <nav style={{ display: isMobile ? 'none' : 'flex', gap: 4, alignItems: 'center', flex: 1, justifyContent: 'center' }}>
             <NavBtn active={view === 'catalog'} onClick={() => nav('catalog')}>
               <Package size={15} /> Catálogo
             </NavBtn>
@@ -56,6 +56,14 @@ export function Header() {
 
           {/* Right actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 3 : 6, flexShrink: 0, minWidth: 0, whiteSpace: 'nowrap', marginLeft: 'auto' }}>
+            {isMobile && !currentUser && (
+              <button
+                onClick={() => nav('catalog')}
+                style={{ background: view === 'catalog' ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', cursor: 'pointer', padding: '6px 9px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}
+              >
+                <Package size={14} /> Catálogo
+              </button>
+            )}
             {isMobile && currentUser?.isAdmin && (
               <div style={{ position: 'relative' }}>
                 <button
@@ -175,8 +183,9 @@ export function Header() {
             {/* Mobile menu */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
-              className="md:hidden" aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: isMobile ? 'flex' : 'none', alignItems: 'center' }}
+              aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -184,8 +193,8 @@ export function Header() {
         </div>
 
         {/* Mobile nav */}
-        {mobileOpen && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} className="md:hidden" aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}>
+        {isMobile && mobileOpen && (
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} aria-label="Menú móvil">
             <MobileNavBtn onClick={() => { setCartOpen(true); setMobileOpen(false); }}>🛒 Ver carrito {cartCount > 0 ? `(${cartCount})` : ''}</MobileNavBtn>
             <a href="https://wa.me/593989961041?text=Hola%20SURTIMAX%2C%20necesito%20informaci%C3%B3n" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', padding: '10px 8px', borderRadius: 6, fontSize: 14, display: 'block' }} onClick={() => setMobileOpen(false)}>💬 WhatsApp</a>
             <MobileNavBtn onClick={() => nav('catalog', true)}>📦 Catálogo</MobileNavBtn>
