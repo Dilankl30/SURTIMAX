@@ -2,12 +2,12 @@
 
 ## 1. Crear proyecto y variables
 1. Crea un proyecto en Supabase.
-2. Copia `Project URL` y `anon public key`.
+2. Copia `Project URL` y `publishable key`.
 3. Crea un archivo `.env.local` en la raíz con:
 
 ```bash
-VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-VITE_SUPABASE_ANON_KEY=TU_ANON_KEY
+VITE_SUPABASE_URL=https://naecqhkaggepagnymzww.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Mv04ClO1Q5Gjm83laJUhng_Pt_l6vEF
 ```
 
 ## 2. Crear base limpia
