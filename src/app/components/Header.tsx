@@ -69,6 +69,8 @@ export function Header() {
                     </span>
                   )}
                 </button>
+              </div>
+            )}
 
             {isMobile && (
               <button
