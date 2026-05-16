@@ -82,23 +82,6 @@ export function AdminLayout() {
         </aside>
       )}
 
-      {isMobile && (
-        <div style={{ backgroundColor: '#1A237E', padding: '8px 10px', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
-          {NAV.map(item => {
-            const active = view === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setView(item.id)}
-                style={{ border: 'none', borderRadius: 8, padding: '8px 6px', background: active ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)', color: 'white', fontSize: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
-              >
-                {item.icon}
-                <span style={{ lineHeight: 1.1 }}>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       <main style={{ flex: 1, overflowX: 'hidden', backgroundColor: '#F0F4F8' }}>
         {content()}

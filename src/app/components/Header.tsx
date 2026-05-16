@@ -55,7 +55,47 @@ export function Header() {
           </nav>
 
           {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 6, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 0 }}>
+            {isMobile && currentUser?.isAdmin && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setCartOpen(!cartOpen)}
+                  style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+                >
+                  <Bell size={18} />
+                  {unreadNotifs > 0 && (
+                    <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+
+            {isMobile && (
+              <button
+                onClick={() => setCartOpen(!cartOpen)}
+                style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+              >
+                <ShoppingCart size={18} />
+                {cartCount > 0 && (
+                  <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {isMobile && (
+              currentUser ? (
+                <div style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: currentUser.isAdmin ? '#FF9800' : '#4FC3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>
+                  {currentUser.name[0]}
+                </div>
+              ) : (
+                <button onClick={() => setAuthOpen(true)} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}>
+                  <User size={16} />
+                </button>
+              )
+            )}
+
             {!isMobile && (
               <>
                 {/* WhatsApp */}
