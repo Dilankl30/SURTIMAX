@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { deleteProductFromSupabase, deleteQuotationFromSupabase, fetchProductsFromSupabase, fetchProfilesFromSupabase, fetchQuotationsFromSupabase, isSupabaseConfigured, productFromRow, profileFromRow, requestEmailLoginCode, requestPasswordRecovery, saveProductToSupabase, saveProfileToSupabase, saveQuotationToSupabase, updateQuotationInSupabase, verifyEmailLoginCode } from './lib/supabase';
 
 export type ViewType =
   | 'catalog'
@@ -18,6 +19,7 @@ export interface Product {
   unitsPerPack: number;
   stock: number;
   available: boolean;
+  imageUrl?: string;
 }
 
 export interface CartItem {
@@ -52,6 +54,7 @@ export interface Quotation {
   clientCedula: string;
   clientAddress: string;
   clientPhone: string;
+  clientEmail?: string;
   items: QuotationItem[];
   totalCotizado: number;
   subtotal: number;
@@ -60,6 +63,8 @@ export interface Quotation {
   finalTotal: number;
   status: 'pending' | 'delivered';
 }
+
+export type QuotationClientData = Pick<Quotation, 'clientName' | 'clientCedula' | 'clientAddress' | 'clientPhone' | 'clientEmail'>;
 
 export interface AppNotification {
   id: string;
@@ -100,8 +105,6 @@ export const INITIAL_PRODUCTS: Product[] = [
 
 const INITIAL_USERS: User[] = [
   { id: 'admin', name: 'Administrador SURTIMAX', cedula: '2200123456001', address: 'Quito, Ecuador', phone: '0989961041', email: 'admin@surtimax.com', password: 'admin123', isAdmin: true },
-  { id: 'u1', name: 'Juan Carlos Pérez', cedula: '1723456789', address: 'Av. 10 de Agosto N32-45, Quito', phone: '0991234567', email: 'juan@example.com', password: 'demo123', isAdmin: false },
-  { id: 'u2', name: 'María González', cedula: '0987654321', address: 'Calle Sucre 12-34, Guayaquil', phone: '0981234567', email: 'maria@example.com', password: 'demo123', isAdmin: false },
 ];
 
 function computeFinancials(items: QuotationItem[], discount: number) {
@@ -112,33 +115,9 @@ function computeFinancials(items: QuotationItem[], discount: number) {
   return { totalCotizado, subtotal, iva, discount, finalTotal };
 }
 
-const Q1_ITEMS: QuotationItem[] = [
-  { code: 'CAR-001', description: 'MENTA GLACIAL', quantity: 5, unitPrice: 3.50 },
-  { code: 'CAR-003', description: 'KAUMAL ORIGINAL', quantity: 3, unitPrice: 3.80 },
-  { code: 'GEL-001', description: 'GELATINAS PEQUEÑA', quantity: 2, unitPrice: 8.00 },
-];
-const Q2_ITEMS: QuotationItem[] = [
-  { code: 'CHO-001', description: 'MANICHO BOMBÓN', quantity: 4, unitPrice: 12.00 },
-  { code: 'CHI-001', description: 'CHICLE TUTTI FRUTI', quantity: 6, unitPrice: 4.50 },
-];
-const Q3_ITEMS: QuotationItem[] = [
-  { code: 'GOM-001', description: 'GOMITAS OSITOS', quantity: 10, unitPrice: 7.50 },
-  { code: 'GOM-002', description: 'GOMITAS GUSANOS', quantity: 8, unitPrice: 7.50 },
-  { code: 'CAR-006', description: 'BARRILETE', quantity: 15, unitPrice: 2.50 },
-];
+const INITIAL_QUOTATIONS: Quotation[] = [];
 
-const INITIAL_QUOTATIONS: Quotation[] = [
-  { id: 'q1', number: 'COT-202604-001', date: '2026-04-15', clientId: 'u1', clientName: 'Juan Carlos Pérez', clientCedula: '1723456789', clientAddress: 'Av. 10 de Agosto N32-45, Quito', clientPhone: '0991234567', items: Q1_ITEMS, ...computeFinancials(Q1_ITEMS, 0), status: 'delivered' },
-  { id: 'q2', number: 'COT-202605-002', date: '2026-05-10', clientId: 'u1', clientName: 'Juan Carlos Pérez', clientCedula: '1723456789', clientAddress: 'Av. 10 de Agosto N32-45, Quito', clientPhone: '0991234567', items: Q2_ITEMS, ...computeFinancials(Q2_ITEMS, 5), status: 'pending' },
-  { id: 'q3', number: 'COT-202605-003', date: '2026-05-14', clientId: 'u2', clientName: 'María González', clientCedula: '0987654321', clientAddress: 'Calle Sucre 12-34, Guayaquil', clientPhone: '0981234567', items: Q3_ITEMS, ...computeFinancials(Q3_ITEMS, 0), status: 'pending' },
-];
-
-const INITIAL_NOTIFICATIONS: AppNotification[] = [
-  { id: 'n1', type: 'new-quote', message: 'Nueva cotización de Juan Carlos Pérez (#COT-202605-002)', date: '2026-05-10', read: false },
-  { id: 'n2', type: 'new-quote', message: 'Nueva cotización de María González (#COT-202605-003)', date: '2026-05-14', read: false },
-  { id: 'n3', type: 'low-stock', message: 'Stock bajo: TRUFFLES SURTIDOS (solo 8 unidades)', date: '2026-05-12', read: false },
-  { id: 'n4', type: 'delivered', message: 'Cotización COT-202604-001 marcada como entregada', date: '2026-04-20', read: true },
-];
+const INITIAL_NOTIFICATIONS: AppNotification[] = [];
 
 // ─── Context ─────────────────────────────────────────────────────────────────
 
@@ -150,6 +129,9 @@ interface AppContextType {
   currentUser: User | null;
   users: User[];
   login: (email: string, password: string) => boolean;
+  requestLoginCode: (email: string) => Promise<boolean>;
+  verifyLoginCode: (email: string, code: string) => Promise<boolean>;
+  requestPasswordReset: (email: string) => Promise<boolean>;
   logout: () => void;
   register: (data: Omit<User, 'id' | 'isAdmin'>) => void;
   products: Product[];
@@ -167,7 +149,7 @@ interface AppContextType {
   authOpen: boolean;
   setAuthOpen: (open: boolean) => void;
   quotations: Quotation[];
-  createQuotation: (items: QuotationItem[], discount?: number) => void;
+  createQuotation: (items: QuotationItem[], discount?: number, clientData?: QuotationClientData) => void;
   updateQuotation: (id: string, updates: Partial<Quotation>) => void;
   deleteQuotation: (id: string) => void;
   notifications: AppNotification[];
@@ -177,10 +159,22 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | null>(null);
 
+const SESSION_KEY = 'surtimax.currentUser';
+
+function getStoredUser() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) as User : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<ViewType>('catalog');
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => getStoredUser());
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -189,30 +183,81 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
 
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchProductsFromSupabase()
+      .then(rows => setProducts(rows.map(productFromRow)))
+      .catch(error => console.warn('No se pudieron cargar productos desde Supabase', error));
+    fetchProfilesFromSupabase()
+      .then(rows => setUsers(prev => {
+        const remoteUsers = rows.map(profileFromRow).map(remote => ({
+          ...remote,
+          password: prev.find(user => user.email.toLowerCase() === remote.email.toLowerCase())?.password ?? remote.password,
+        }));
+        return remoteUsers.length ? remoteUsers : prev;
+      }))
+      .catch(error => console.warn('No se pudieron cargar perfiles desde Supabase', error));
+    fetchQuotationsFromSupabase()
+      .then(remoteQuotes => { if (remoteQuotes.length) setQuotations(remoteQuotes); })
+      .catch(error => console.warn('No se pudieron cargar cotizaciones desde Supabase', error));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (currentUser) window.localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+    else window.localStorage.removeItem(SESSION_KEY);
+  }, [currentUser]);
+
   const login = useCallback((email: string, password: string): boolean => {
     const user = users.find(u => u.email === email && u.password === password);
     if (user) { setCurrentUser(user); return true; }
     return false;
   }, [users]);
 
+  const requestLoginCode = useCallback(async (email: string): Promise<boolean> => {
+    await requestEmailLoginCode(email);
+    return true;
+  }, []);
+
+  const verifyLoginCode = useCallback(async (email: string, code: string): Promise<boolean> => {
+    await verifyEmailLoginCode(email, code);
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) { setCurrentUser(user); return true; }
+    return false;
+  }, [users]);
+
+  const requestPasswordReset = useCallback(async (email: string): Promise<boolean> => {
+    await requestPasswordRecovery(email);
+    return true;
+  }, []);
+
   const logout = useCallback(() => { setCurrentUser(null); setView('catalog'); }, []);
 
   const register = useCallback((data: Omit<User, 'id' | 'isAdmin'>) => {
-    const newUser: User = { ...data, id: `u${Date.now()}`, isAdmin: false };
+    const newUser: User = { ...data, id: crypto.randomUUID?.() ?? `u${Date.now()}`, isAdmin: false };
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
+    if (isSupabaseConfigured) saveProfileToSupabase(newUser).catch(error => console.warn('No se pudo guardar el perfil en Supabase', error));
   }, []);
 
   const addProduct = useCallback((p: Omit<Product, 'id'>) => {
-    setProducts(prev => [...prev, { ...p, id: `p${Date.now()}` }]);
+    const newProduct = { ...p, id: `p${Date.now()}` };
+    setProducts(prev => [...prev, newProduct]);
+    if (isSupabaseConfigured) saveProductToSupabase(newProduct).catch(error => console.warn('No se pudo guardar el producto en Supabase', error));
   }, []);
 
   const updateProduct = useCallback((id: string, updates: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    setProducts(prev => {
+      const next = prev.map(p => p.id === id ? { ...p, ...updates } : p);
+      const updated = next.find(p => p.id === id);
+      if (updated && isSupabaseConfigured) saveProductToSupabase(updated).catch(error => console.warn('No se pudo actualizar el producto en Supabase', error));
+      return next;
+    });
   }, []);
 
   const deleteProduct = useCallback((id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
+    if (isSupabaseConfigured) deleteProductFromSupabase(id).catch(error => console.warn('No se pudo eliminar el producto en Supabase', error));
   }, []);
 
   const addToCart = useCallback((productId: string, quantity = 1) => {
@@ -237,7 +282,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => setCart([]), []);
 
-  const createQuotation = useCallback((items: QuotationItem[], discount = 0) => {
+  const createQuotation = useCallback((items: QuotationItem[], discount = 0, clientData?: QuotationClientData) => {
     if (!currentUser) return;
     const totalCotizado = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
     const subtotal = totalCotizado / 1.15;
@@ -246,25 +291,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const month = new Date().toISOString().slice(0, 7).replace('-', '');
     const num = String(quotations.length + 1).padStart(3, '0');
 
-    const newQuote: Quotation = {
-      id: `q${Date.now()}`,
-      number: `COT-${month}-${num}`,
-      date: new Date().toISOString().slice(0, 10),
-      clientId: currentUser.id,
+    const quoteClient = clientData ?? {
       clientName: currentUser.name,
       clientCedula: currentUser.cedula,
       clientAddress: currentUser.address,
       clientPhone: currentUser.phone,
+      clientEmail: currentUser.email,
+    };
+
+    const newQuote: Quotation = {
+      id: `q${Date.now()}`,
+      number: `COT-${month}-${num}`,
+      date: new Date().toISOString().slice(0, 10),
+      clientId: clientData ? `physical-${Date.now()}` : currentUser.id,
+      clientName: quoteClient.clientName,
+      clientCedula: quoteClient.clientCedula,
+      clientAddress: quoteClient.clientAddress,
+      clientPhone: quoteClient.clientPhone,
+      clientEmail: quoteClient.clientEmail,
       items, totalCotizado, subtotal, iva, discount, finalTotal,
       status: 'pending',
     };
 
     setQuotations(prev => [...prev, newQuote]);
+    if (isSupabaseConfigured) saveQuotationToSupabase(newQuote).catch(error => console.warn('No se pudo guardar la cotización en Supabase', error));
     setSelectedQuotationId(newQuote.id);
     setNotifications(prev => [{
       id: `n${Date.now()}`,
       type: 'new-quote',
-      message: `Nueva cotización de ${currentUser.name} (#${newQuote.number})`,
+      message: `Nueva cotización de ${quoteClient.clientName} (#${newQuote.number})`,
       date: newQuote.date,
       read: false,
     }, ...prev]);
@@ -275,10 +330,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateQuotation = useCallback((id: string, updates: Partial<Quotation>) => {
     setQuotations(prev => prev.map(q => q.id === id ? { ...q, ...updates } : q));
+    if (isSupabaseConfigured) updateQuotationInSupabase(id, updates).catch(error => console.warn('No se pudo actualizar la cotización en Supabase', error));
   }, []);
 
   const deleteQuotation = useCallback((id: string) => {
     setQuotations(prev => prev.filter(q => q.id !== id));
+    if (isSupabaseConfigured) deleteQuotationFromSupabase(id).catch(error => console.warn('No se pudo eliminar la cotización en Supabase', error));
   }, []);
 
   const markNotificationRead = useCallback((id: string) => {
@@ -292,7 +349,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider value={{
       view, setView, selectedQuotationId, setSelectedQuotationId,
-      currentUser, users, login, logout, register,
+      currentUser, users, login, requestLoginCode, verifyLoginCode, requestPasswordReset, logout, register,
       products, setProducts, addProduct, updateProduct, deleteProduct,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart,
       cartOpen, setCartOpen, authOpen, setAuthOpen,
