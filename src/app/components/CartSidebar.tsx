@@ -101,8 +101,8 @@ export function CartSidebar() {
             </div>
           ) : cartItems.map(item => (
             <div key={item.productId} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F5F5F5', flexWrap: 'wrap' }}>
-              <div style={{ width: 46, height: 46, borderRadius: 10, background: 'linear-gradient(135deg, #E3F2FD, #BBDEFB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
-                🍬
+              <div style={{ width: 46, height: 46, borderRadius: 10, background: 'linear-gradient(135deg, #E3F2FD, #BBDEFB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0, overflow: 'hidden' }}>
+                {item.product.imageUrl ? <img src={item.product.imageUrl} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🍬'}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#1A237E', marginBottom: 2, lineHeight: 1.3 }}>{item.product.name}</div>

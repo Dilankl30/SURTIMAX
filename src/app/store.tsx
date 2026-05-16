@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { fetchProductsFromSupabase, isSupabaseConfigured, requestEmailLoginCode, requestPasswordRecovery, verifyEmailLoginCode } from './lib/supabase';
 
 export type ViewType =
   | 'catalog'
@@ -18,6 +19,7 @@ export interface Product {
   unitsPerPack: number;
   stock: number;
   available: boolean;
+  imageUrl?: string;
 }
 
 export interface CartItem {
@@ -103,8 +105,6 @@ export const INITIAL_PRODUCTS: Product[] = [
 
 const INITIAL_USERS: User[] = [
   { id: 'admin', name: 'Administrador SURTIMAX', cedula: '2200123456001', address: 'Quito, Ecuador', phone: '0989961041', email: 'admin@surtimax.com', password: 'admin123', isAdmin: true },
-  { id: 'u1', name: 'Juan Carlos Pérez', cedula: '1723456789', address: 'Av. 10 de Agosto N32-45, Quito', phone: '0991234567', email: 'juan@example.com', password: 'demo123', isAdmin: false },
-  { id: 'u2', name: 'María González', cedula: '0987654321', address: 'Calle Sucre 12-34, Guayaquil', phone: '0981234567', email: 'maria@example.com', password: 'demo123', isAdmin: false },
 ];
 
 function computeFinancials(items: QuotationItem[], discount: number) {
@@ -115,33 +115,9 @@ function computeFinancials(items: QuotationItem[], discount: number) {
   return { totalCotizado, subtotal, iva, discount, finalTotal };
 }
 
-const Q1_ITEMS: QuotationItem[] = [
-  { code: 'CAR-001', description: 'MENTA GLACIAL', quantity: 5, unitPrice: 3.50 },
-  { code: 'CAR-003', description: 'KAUMAL ORIGINAL', quantity: 3, unitPrice: 3.80 },
-  { code: 'GEL-001', description: 'GELATINAS PEQUEÑA', quantity: 2, unitPrice: 8.00 },
-];
-const Q2_ITEMS: QuotationItem[] = [
-  { code: 'CHO-001', description: 'MANICHO BOMBÓN', quantity: 4, unitPrice: 12.00 },
-  { code: 'CHI-001', description: 'CHICLE TUTTI FRUTI', quantity: 6, unitPrice: 4.50 },
-];
-const Q3_ITEMS: QuotationItem[] = [
-  { code: 'GOM-001', description: 'GOMITAS OSITOS', quantity: 10, unitPrice: 7.50 },
-  { code: 'GOM-002', description: 'GOMITAS GUSANOS', quantity: 8, unitPrice: 7.50 },
-  { code: 'CAR-006', description: 'BARRILETE', quantity: 15, unitPrice: 2.50 },
-];
+const INITIAL_QUOTATIONS: Quotation[] = [];
 
-const INITIAL_QUOTATIONS: Quotation[] = [
-  { id: 'q1', number: 'COT-202604-001', date: '2026-04-15', clientId: 'u1', clientName: 'Juan Carlos Pérez', clientCedula: '1723456789', clientAddress: 'Av. 10 de Agosto N32-45, Quito', clientPhone: '0991234567', items: Q1_ITEMS, ...computeFinancials(Q1_ITEMS, 0), status: 'delivered' },
-  { id: 'q2', number: 'COT-202605-002', date: '2026-05-10', clientId: 'u1', clientName: 'Juan Carlos Pérez', clientCedula: '1723456789', clientAddress: 'Av. 10 de Agosto N32-45, Quito', clientPhone: '0991234567', items: Q2_ITEMS, ...computeFinancials(Q2_ITEMS, 5), status: 'pending' },
-  { id: 'q3', number: 'COT-202605-003', date: '2026-05-14', clientId: 'u2', clientName: 'María González', clientCedula: '0987654321', clientAddress: 'Calle Sucre 12-34, Guayaquil', clientPhone: '0981234567', items: Q3_ITEMS, ...computeFinancials(Q3_ITEMS, 0), status: 'pending' },
-];
-
-const INITIAL_NOTIFICATIONS: AppNotification[] = [
-  { id: 'n1', type: 'new-quote', message: 'Nueva cotización de Juan Carlos Pérez (#COT-202605-002)', date: '2026-05-10', read: false },
-  { id: 'n2', type: 'new-quote', message: 'Nueva cotización de María González (#COT-202605-003)', date: '2026-05-14', read: false },
-  { id: 'n3', type: 'low-stock', message: 'Stock bajo: TRUFFLES SURTIDOS (solo 8 unidades)', date: '2026-05-12', read: false },
-  { id: 'n4', type: 'delivered', message: 'Cotización COT-202604-001 marcada como entregada', date: '2026-04-20', read: true },
-];
+const INITIAL_NOTIFICATIONS: AppNotification[] = [];
 
 // ─── Context ─────────────────────────────────────────────────────────────────
 
@@ -153,6 +129,9 @@ interface AppContextType {
   currentUser: User | null;
   users: User[];
   login: (email: string, password: string) => boolean;
+  requestLoginCode: (email: string) => Promise<boolean>;
+  verifyLoginCode: (email: string, code: string) => Promise<boolean>;
+  requestPasswordReset: (email: string) => Promise<boolean>;
   logout: () => void;
   register: (data: Omit<User, 'id' | 'isAdmin'>) => void;
   products: Product[];
@@ -192,11 +171,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
 
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchProductsFromSupabase()
+      .then(rows => setProducts(rows.map(row => ({
+        id: row.id,
+        code: row.code,
+        name: row.name,
+        category: row.category,
+        price: Number(row.price),
+        presentation: row.presentation,
+        unitsPerPack: row.units_per_pack,
+        stock: row.stock,
+        available: row.available,
+        imageUrl: row.image_url ?? '',
+      }))))
+      .catch(error => console.warn('No se pudieron cargar productos desde Supabase', error));
+  }, []);
+
   const login = useCallback((email: string, password: string): boolean => {
     const user = users.find(u => u.email === email && u.password === password);
     if (user) { setCurrentUser(user); return true; }
     return false;
   }, [users]);
+
+  const requestLoginCode = useCallback(async (email: string): Promise<boolean> => {
+    await requestEmailLoginCode(email);
+    return true;
+  }, []);
+
+  const verifyLoginCode = useCallback(async (email: string, code: string): Promise<boolean> => {
+    await verifyEmailLoginCode(email, code);
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) { setCurrentUser(user); return true; }
+    return false;
+  }, [users]);
+
+  const requestPasswordReset = useCallback(async (email: string): Promise<boolean> => {
+    await requestPasswordRecovery(email);
+    return true;
+  }, []);
 
   const logout = useCallback(() => { setCurrentUser(null); setView('catalog'); }, []);
 
@@ -304,7 +318,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider value={{
       view, setView, selectedQuotationId, setSelectedQuotationId,
-      currentUser, users, login, logout, register,
+      currentUser, users, login, requestLoginCode, verifyLoginCode, requestPasswordReset, logout, register,
       products, setProducts, addProduct, updateProduct, deleteProduct,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart,
       cartOpen, setCartOpen, authOpen, setAuthOpen,

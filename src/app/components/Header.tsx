@@ -260,25 +260,25 @@ function NotificationsPanel({ onClose }: { onClose: () => void }) {
   return (
     <>
       <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={onClose} />
-      <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'white', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', width: 'min(340px, calc(100vw - 24px))', zIndex: 150, overflow: 'hidden', border: '1px solid #E3F2FD' }}>
+      <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'white', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', width: 'min(520px, calc(100vw - 24px))', zIndex: 150, overflow: 'hidden', border: '1px solid #E3F2FD' }}>
         <div style={{ padding: '14px 16px', borderBottom: '1px solid #E3F2FD', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFE' }}>
           <span style={{ fontWeight: 700, color: '#0D47A1', fontSize: 14 }}>🔔 Notificaciones</span>
           <button onClick={clearNotifications} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>
             Marcar todas leídas
           </button>
         </div>
-        <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+        <div style={{ maxHeight: 'min(70vh, 520px)', overflowY: 'auto' }}>
           {notifications.length === 0 ? (
             <div style={{ padding: 32, textAlign: 'center', color: '#90A4AE', fontSize: 13 }}>Sin notificaciones</div>
           ) : notifications.map(n => (
             <div
               key={n.id}
               onClick={() => markNotificationRead(n.id)}
-              style={{ padding: '12px 16px', borderBottom: '1px solid #F5F5F5', backgroundColor: n.read ? 'white' : '#EEF6FF', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start' }}
+              style={{ padding: '12px 16px', borderBottom: '1px solid #F5F5F5', backgroundColor: n.read ? 'white' : '#EEF6FF', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start', minWidth: 0 }}
             >
               <span style={{ fontSize: 18, flexShrink: 0 }}>{iconMap[n.type]}</span>
-              <div>
-                <div style={{ fontSize: 13, color: '#263238', marginBottom: 2 }}>{n.message}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: '#263238', marginBottom: 2, lineHeight: 1.45, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{n.message}</div>
                 <div style={{ fontSize: 11, color: '#90A4AE' }}>{n.date}</div>
               </div>
               {!n.read && <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#1976D2', flexShrink: 0, marginTop: 4 }} />}
