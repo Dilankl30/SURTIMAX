@@ -114,8 +114,29 @@ alter table public.quotations enable row level security;
 alter table public.quotation_items enable row level security;
 alter table public.notifications enable row level security;
 
+drop policy if exists "Productos lectura" on public.products;
+drop policy if exists "Productos escritura" on public.products;
+drop policy if exists "Perfiles lectura" on public.profiles;
+drop policy if exists "Perfiles escritura" on public.profiles;
+drop policy if exists "Cotizaciones lectura" on public.quotations;
+drop policy if exists "Cotizaciones escritura" on public.quotations;
+drop policy if exists "Items lectura" on public.quotation_items;
+drop policy if exists "Items escritura" on public.quotation_items;
+drop policy if exists "Notificaciones lectura" on public.notifications;
+drop policy if exists "Notificaciones escritura" on public.notifications;
 drop policy if exists "Productos visibles" on public.products;
 drop policy if exists "Perfiles visibles por anon para demo" on public.profiles;
 
-create policy "Productos visibles" on public.products for select using (true);
-create policy "Perfiles visibles por anon para demo" on public.profiles for select using (true);
+create policy "Productos lectura" on public.products for select using (true);
+create policy "Productos escritura" on public.products for all using (true) with check (true);
+create policy "Perfiles lectura" on public.profiles for select using (true);
+create policy "Perfiles escritura" on public.profiles for all using (true) with check (true);
+create policy "Cotizaciones lectura" on public.quotations for select using (true);
+create policy "Cotizaciones escritura" on public.quotations for all using (true) with check (true);
+create policy "Items lectura" on public.quotation_items for select using (true);
+create policy "Items escritura" on public.quotation_items for all using (true) with check (true);
+create policy "Notificaciones lectura" on public.notifications for select using (true);
+create policy "Notificaciones escritura" on public.notifications for all using (true) with check (true);
+
+grant usage on schema public to anon, authenticated;
+grant all on all tables in schema public to anon, authenticated;
