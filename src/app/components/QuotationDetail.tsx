@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Printer, ArrowLeft, MessageCircle, Edit2, Save, X } from 'lucide-react';
 import { useStore } from '../store';
+import type { QuotationClientData } from '../store';
+import { createQuotationPdfBlob, createQuotationPdfBlobFromElement } from '../utils/quotationPdf';
 import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
 
 export function QuotationDetail() {
@@ -9,9 +11,22 @@ export function QuotationDetail() {
   const [discount, setDiscount] = useState(0);
   const [editingDiscount, setEditingDiscount] = useState(false);
   const [tempDiscount, setTempDiscount] = useState('0');
+  const [editingClient, setEditingClient] = useState(false);
+  const [clientDraft, setClientDraft] = useState<QuotationClientData>({ clientName: '', clientCedula: '', clientAddress: '', clientPhone: '', clientEmail: '' });
+  const [clientEditError, setClientEditError] = useState('');
 
   useEffect(() => {
-    if (quote) { setDiscount(quote.discount); setTempDiscount(String(quote.discount)); }
+    if (quote) {
+      setDiscount(quote.discount);
+      setTempDiscount(String(quote.discount));
+      setClientDraft({
+        clientName: quote.clientName,
+        clientCedula: quote.clientCedula,
+        clientAddress: quote.clientAddress,
+        clientPhone: quote.clientPhone,
+        clientEmail: quote.clientEmail ?? '',
+      });
+    }
   }, [quote]);
 
   if (!quote) {
@@ -35,13 +50,79 @@ export function QuotationDetail() {
     setEditingDiscount(false);
   };
 
-  const clientWANum = quote.clientPhone.replace(/[^0-9]/g, '');
+  const handleClientDraftChange = (field: keyof QuotationClientData, value: string) => {
+    setClientDraft(prev => ({ ...prev, [field]: value }));
+    if (clientEditError) setClientEditError('');
+  };
+
+  const handleSaveClient = () => {
+    const requiredFields: Array<keyof QuotationClientData> = ['clientName', 'clientCedula', 'clientAddress', 'clientPhone', 'clientEmail'];
+    if (requiredFields.some(field => !String(clientDraft[field] ?? '').trim())) {
+      setClientEditError('Completa todos los datos del cliente antes de guardar.');
+      return;
+    }
+    updateQuotation(quote.id, {
+      clientName: clientDraft.clientName.trim(),
+      clientCedula: clientDraft.clientCedula.trim(),
+      clientAddress: clientDraft.clientAddress.trim(),
+      clientPhone: clientDraft.clientPhone.trim(),
+      clientEmail: clientDraft.clientEmail?.trim(),
+    });
+    setEditingClient(false);
+  };
+
+  const clientWANum = normalizeWhatsAppNumber(quote.clientPhone);
   const clientWAMsg = encodeURIComponent(
     `Hola ${quote.clientName}, su cotización *${quote.number}* por un total de *$${finalTotal.toFixed(2)}* está lista.\n\nProductos:\n` +
     quote.items.map(i => `• ${i.description} x${i.quantity} = $${(i.quantity * i.unitPrice).toFixed(2)}`).join('\n') +
     `\n\n_SURTIMAX - variedad y buen precio_`
   );
   const adminWAMsg = encodeURIComponent(`Hola SURTIMAX, quiero información sobre mi cotización ${quote.number}`);
+  const clientWAUrl = `https://wa.me/${clientWANum}?text=${clientWAMsg}`;
+
+  const downloadPdf = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSendClientWhatsApp = async () => {
+    const printableQuote = { ...quote, discount, totalCotizado, subtotal, iva, finalTotal };
+    const documentElement = document.getElementById('quotation-document');
+    let pdfBlob: Blob;
+
+    try {
+      pdfBlob = documentElement
+        ? await createQuotationPdfBlobFromElement(documentElement)
+        : createQuotationPdfBlob(printableQuote);
+    } catch {
+      pdfBlob = createQuotationPdfBlob(printableQuote);
+    }
+
+    const fileName = `${quote.number}.pdf`;
+    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+    if (navigator.canShare?.({ files: [pdfFile] })) {
+      try {
+        await navigator.share({
+          title: `Cotización ${quote.number}`,
+          text: decodeURIComponent(clientWAMsg),
+          files: [pdfFile],
+        });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+      }
+    }
+
+    downloadPdf(pdfBlob, fileName);
+    window.open(clientWAUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const backView = currentUser?.isAdmin ? 'admin-quotes' : 'my-quotes';
 
@@ -57,13 +138,12 @@ export function QuotationDetail() {
           <Printer size={16} /> Imprimir / PDF
         </button>
         {currentUser?.isAdmin ? (
-          <a
-            href={`https://wa.me/593${clientWANum.startsWith('0') ? clientWANum.slice(1) : clientWANum}?text=${clientWAMsg}`}
-            target="_blank" rel="noopener noreferrer"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#25D366', color: 'white', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}
+          <button
+            onClick={handleSendClientWhatsApp}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#25D366', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
           >
-            <MessageCircle size={16} /> Enviar al cliente
-          </a>
+            <MessageCircle size={16} /> Enviar PDF por WhatsApp
+          </button>
         ) : (
           <a
             href={`https://wa.me/593989961041?text=${adminWAMsg}`}
@@ -116,12 +196,36 @@ export function QuotationDetail() {
           <h3 style={{ margin: '0 0 12px', color: '#0D47A1', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 6, display: 'inline-block' }}>
             Información de la Cotización Para:
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px 24px', fontSize: 13 }}>
-            <ClientRow label="Nombre / Razón Social" value={quote.clientName} />
-            <ClientRow label="Teléfono" value={quote.clientPhone} />
-            <ClientRow label="R.U.C. / C.I." value={quote.clientCedula} />
-            <ClientRow label="Dirección" value={quote.clientAddress} />
-          </div>
+          {currentUser?.isAdmin && (
+            <div className="no-print" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {editingClient ? (
+                <>
+                  <button onClick={handleSaveClient} style={miniSaveBtn}><Save size={13} /> Guardar datos</button>
+                  <button onClick={() => { setEditingClient(false); setClientEditError(''); }} style={miniCancelBtn}><X size={13} /> Cancelar</button>
+                </>
+              ) : (
+                <button onClick={() => setEditingClient(true)} style={miniEditBtn}><Edit2 size={13} /> Editar datos del cliente</button>
+              )}
+            </div>
+          )}
+          {editingClient ? (
+            <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px 14px', fontSize: 13 }}>
+              <ClientEditField label="Nombre / Razón Social *" value={clientDraft.clientName} onChange={value => handleClientDraftChange('clientName', value)} />
+              <ClientEditField label="Teléfono *" value={clientDraft.clientPhone} onChange={value => handleClientDraftChange('clientPhone', value)} />
+              <ClientEditField label="R.U.C. / C.I. *" value={clientDraft.clientCedula} onChange={value => handleClientDraftChange('clientCedula', value)} />
+              <ClientEditField label="Dirección *" value={clientDraft.clientAddress} onChange={value => handleClientDraftChange('clientAddress', value)} />
+              <ClientEditField label="Correo electrónico *" value={clientDraft.clientEmail ?? ''} onChange={value => handleClientDraftChange('clientEmail', value)} type="email" />
+              {clientEditError && <div style={{ gridColumn: '1 / -1', color: '#C62828', backgroundColor: '#FFEBEE', border: '1px solid #FFCDD2', borderRadius: 8, padding: '8px 10px', fontSize: 12 }}>⚠️ {clientEditError}</div>}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px 24px', fontSize: 13 }}>
+              <ClientRow label="Nombre / Razón Social" value={quote.clientName} />
+              <ClientRow label="Teléfono" value={quote.clientPhone} />
+              <ClientRow label="R.U.C. / C.I." value={quote.clientCedula} />
+              <ClientRow label="Dirección" value={quote.clientAddress} />
+              {quote.clientEmail && <ClientRow label="Correo" value={quote.clientEmail} />}
+            </div>
+          )}
         </div>
 
         {/* Items table */}
@@ -225,12 +329,28 @@ export function QuotationDetail() {
   );
 }
 
+function normalizeWhatsAppNumber(phone: string) {
+  const digits = phone.replace(/[^0-9]/g, '');
+  if (digits.startsWith('593')) return digits;
+  if (digits.startsWith('0')) return `593${digits.slice(1)}`;
+  return `593${digits}`;
+}
+
 function ClientRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ fontSize: 13 }}>
       <span style={{ color: '#78909C' }}>{label}: </span>
       <strong style={{ color: '#1A237E' }}>{value}</strong>
     </div>
+  );
+}
+
+function ClientEditField({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) {
+  return (
+    <label style={{ display: 'grid', gap: 5, color: '#455A64', fontSize: 12, fontWeight: 700 }}>
+      {label}
+      <input value={value} onChange={e => onChange(e.target.value)} type={type} style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #BBDEFB', borderRadius: 8, padding: '8px 10px', fontSize: 13, outline: 'none' }} />
+    </label>
   );
 }
 
@@ -242,6 +362,10 @@ function TotalRow({ label, value, highlight }: { label: string; value: any; high
     </div>
   );
 }
+
+const miniEditBtn: React.CSSProperties = { background: '#E3F2FD', border: '1px solid #BBDEFB', color: '#0D47A1', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
+const miniSaveBtn: React.CSSProperties = { background: '#388E3C', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
+const miniCancelBtn: React.CSSProperties = { background: '#EF5350', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 
 const th: React.CSSProperties = { padding: '11px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, letterSpacing: 0.5 };
 const tdC: React.CSSProperties = { padding: '10px 12px', textAlign: 'center', fontSize: 13 };
