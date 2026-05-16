@@ -55,76 +55,80 @@ export function Header() {
           </nav>
 
           {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 6, flexShrink: 0 }}>
-            {/* WhatsApp */}
-            <a
-              href="https://wa.me/593989961041?text=Hola%20SURTIMAX%2C%20necesito%20informaci%C3%B3n"
-              target="_blank" rel="noopener noreferrer"
-              title="Contactar por WhatsApp"
-              style={{ background: '#25D366', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-            >
-              <MessageCircle size={isMobile ? 16 : 18} />
-            </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 6, flexShrink: 0 }}>
+            {!isMobile && (
+              <>
+                {/* WhatsApp */}
+                <a
+                  href="https://wa.me/593989961041?text=Hola%20SURTIMAX%2C%20necesito%20informaci%C3%B3n"
+                  target="_blank" rel="noopener noreferrer"
+                  title="Contactar por WhatsApp"
+                  style={{ background: '#25D366', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+                >
+                  <MessageCircle size={18} />
+                </a>
 
-            {/* Cart */}
-            <button
-              onClick={() => setCartOpen(!cartOpen)}
-              style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
-            >
-              <ShoppingCart size={isMobile ? 18 : 20} />
-              {cartCount > 0 && (
-                <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
-                  {cartCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notifications (admin only) */}
-            {currentUser?.isAdmin && (
-              <div style={{ position: 'relative' }}>
+                {/* Cart */}
                 <button
-                  onClick={() => setNotifOpen(!notifOpen)}
+                  onClick={() => setCartOpen(!cartOpen)}
                   style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
                 >
-                  <Bell size={isMobile ? 18 : 20} />
-                  {unreadNotifs > 0 && (
+                  <ShoppingCart size={20} />
+                  {cartCount > 0 && (
                     <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
-                      {unreadNotifs}
+                      {cartCount}
                     </span>
                   )}
                 </button>
-                {notifOpen && <NotificationsPanel onClose={() => setNotifOpen(false)} />}
-              </div>
-            )}
 
-            {/* User desktop */}
-            {!isMobile && (currentUser ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px' }}>
-                  <div style={{ width: 26, height: 26, borderRadius: '50%', backgroundColor: currentUser.isAdmin ? '#FF9800' : '#4FC3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>
-                    {currentUser.name[0]}
+                {/* Notifications (admin only) */}
+                {currentUser?.isAdmin && (
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      onClick={() => setNotifOpen(!notifOpen)}
+                      style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+                    >
+                      <Bell size={20} />
+                      {unreadNotifs > 0 && (
+                        <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
+                          {unreadNotifs}
+                        </span>
+                      )}
+                    </button>
+                    {notifOpen && <NotificationsPanel onClose={() => setNotifOpen(false)} />}
                   </div>
-                  <span style={{ color: 'white', fontSize: 13, fontWeight: 500 }}>
-                    {currentUser.name.split(' ')[0]}
-                    {currentUser.isAdmin && <span style={{ marginLeft: 4, fontSize: 10, backgroundColor: '#FF9800', padding: '1px 5px', borderRadius: 10 }}>Admin</span>}
-                  </span>
-                </div>
-                <button
-                  onClick={logout}
-                  style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
-                  title="Cerrar sesión"
-                >
-                  <LogOut size={isMobile ? 16 : 18} />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setAuthOpen(true)}
-                style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', cursor: 'pointer', padding: '8px 14px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500 }}
-              >
-                <User size={isMobile ? 14 : 16} /> {isMobile ? 'Login' : 'Ingresar'}
-              </button>
-            ))}
+                )}
+
+                {/* User desktop */}
+                {currentUser ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px' }}>
+                      <div style={{ width: 26, height: 26, borderRadius: '50%', backgroundColor: currentUser.isAdmin ? '#FF9800' : '#4FC3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>
+                        {currentUser.name[0]}
+                      </div>
+                      <span style={{ color: 'white', fontSize: 13, fontWeight: 500 }}>
+                        {currentUser.name.split(' ')[0]}
+                        {currentUser.isAdmin && <span style={{ marginLeft: 4, fontSize: 10, backgroundColor: '#FF9800', padding: '1px 5px', borderRadius: 10 }}>Admin</span>}
+                      </span>
+                    </div>
+                    <button
+                      onClick={logout}
+                      style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+                      title="Cerrar sesión"
+                    >
+                      <LogOut size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setAuthOpen(true)}
+                    style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', cursor: 'pointer', padding: '8px 14px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500 }}
+                  >
+                    <User size={16} /> Ingresar
+                  </button>
+                )}
+              </>
+            )}
 
             {/* Mobile menu */}
             <button
@@ -140,6 +144,8 @@ export function Header() {
         {/* Mobile nav */}
         {mobileOpen && (
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} className="md:hidden">
+            <MobileNavBtn onClick={() => { setCartOpen(true); setMobileOpen(false); }}>🛒 Ver carrito {cartCount > 0 ? `(${cartCount})` : ''}</MobileNavBtn>
+            <a href="https://wa.me/593989961041?text=Hola%20SURTIMAX%2C%20necesito%20informaci%C3%B3n" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', padding: '10px 8px', borderRadius: 6, fontSize: 14, display: 'block' }} onClick={() => setMobileOpen(false)}>💬 WhatsApp</a>
             <MobileNavBtn onClick={() => nav('catalog', true)}>📦 Catálogo</MobileNavBtn>
             {currentUser && !currentUser.isAdmin && (
               <MobileNavBtn onClick={() => nav('my-quotes', true)}>📋 Mis Cotizaciones</MobileNavBtn>
