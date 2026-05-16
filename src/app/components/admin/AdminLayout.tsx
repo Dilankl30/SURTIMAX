@@ -83,7 +83,7 @@ export function AdminLayout() {
       )}
 
 
-      <main style={{ flex: 1, overflowX: 'hidden', backgroundColor: '#F0F4F8' }}>
+      <main style={{ flex: 1, minWidth: 0, overflowX: 'hidden', backgroundColor: '#F0F4F8' }}>
         {content()}
       </main>
     </div>

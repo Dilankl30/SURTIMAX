@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, Search, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Search, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { useStore } from '../../store';
 import type { Product } from '../../store';
 
 const CATEGORIES = ['Caramelos', 'Chocolates', 'Gelatinas', 'Chicles', 'Confites', 'Gomas', 'Otros'];
 
 const EMPTY: Omit<Product, 'id'> = {
-  code: '', name: '', category: 'Caramelos', price: 0, presentation: '', unitsPerPack: 0, stock: 0, available: true,
+  code: '', name: '', category: 'Caramelos', price: 0, presentation: '', unitsPerPack: 0, stock: 0, available: true, imageUrl: '',
 };
 
 export function AdminProducts() {
@@ -25,7 +25,7 @@ export function AdminProducts() {
 
   const startEdit = (p: Product) => {
     setEditId(p.id);
-    setForm({ code: p.code, name: p.name, category: p.category, price: p.price, presentation: p.presentation, unitsPerPack: p.unitsPerPack, stock: p.stock, available: p.available });
+    setForm({ code: p.code, name: p.name, category: p.category, price: p.price, presentation: p.presentation, unitsPerPack: p.unitsPerPack, stock: p.stock, available: p.available, imageUrl: p.imageUrl ?? '' });
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -41,6 +41,13 @@ export function AdminProducts() {
   const handleCancel = () => { setShowForm(false); setEditId(null); setForm(EMPTY); };
 
   const set = <K extends keyof typeof form>(key: K, val: (typeof form)[K]) => setForm(f => ({ ...f, [key]: val }));
+
+  const handleImageUpload = (file?: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => set('imageUrl', String(reader.result || ''));
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div style={{ padding: 24 }}>
@@ -81,6 +88,18 @@ export function AdminProducts() {
             <FField label="Presentación" value={form.presentation} onChange={v => set('presentation', v)} placeholder="Paca x 100u" />
             <FField label="Unidades por Paca" value={String(form.unitsPerPack)} onChange={v => set('unitsPerPack', parseInt(v) || 0)} placeholder="100" type="number" />
             <FField label="Stock Inicial" value={String(form.stock)} onChange={v => set('stock', parseInt(v) || 0)} placeholder="50" type="number" />
+            <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '96px minmax(0, 1fr)', gap: 14, alignItems: 'center', border: '1px dashed #BBDEFB', borderRadius: 12, padding: 12, backgroundColor: '#F8FAFE' }}>
+              <div style={{ width: 96, height: 82, borderRadius: 10, background: '#E3F2FD', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1976D2' }}>
+                {form.imageUrl ? <img src={form.imageUrl} alt="Vista previa producto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={28} />}
+              </div>
+              <div>
+                <label style={lbl}>Foto / imagen del producto</label>
+                <input type="file" accept="image/*" onChange={e => handleImageUpload(e.target.files?.[0])} style={{ ...inp, padding: 8, backgroundColor: 'white' }} />
+                {form.imageUrl && (
+                  <button onClick={() => set('imageUrl', '')} style={{ marginTop: 8, background: 'none', border: 'none', color: '#EF5350', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0 }}>Quitar imagen</button>
+                )}
+              </div>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 24 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: '#455A64', fontWeight: 500 }}>
                 <input type="checkbox" checked={form.available} onChange={e => set('available', e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
@@ -117,16 +136,21 @@ export function AdminProducts() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ backgroundColor: '#F8FAFE', borderBottom: '2px solid #E3F2FD' }}>
-                {['Código', 'Producto', 'Categoría', 'Precio', 'Presentación', 'Stock', 'Estado', 'Acciones'].map(h => (
+                {['Imagen', 'Código', 'Producto', 'Categoría', 'Precio', 'Presentación', 'Stock', 'Estado', 'Acciones'].map(h => (
                   <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: 11, fontWeight: 800, color: '#546E7A', textTransform: 'uppercase', letterSpacing: 0.4, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: '#90A4AE' }}>No se encontraron productos</td></tr>
+                <tr><td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: '#90A4AE' }}>No se encontraron productos</td></tr>
               ) : filtered.map((p, i) => (
                 <tr key={p.id} style={{ borderBottom: '1px solid #F5F5F5', backgroundColor: i % 2 === 0 ? 'white' : '#FAFBFC', transition: 'background 0.1s' }}>
+                  <td style={td}>
+                    <div style={{ width: 42, height: 42, borderRadius: 8, overflow: 'hidden', backgroundColor: '#E3F2FD', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1976D2' }}>
+                      {p.imageUrl ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={18} />}
+                    </div>
+                  </td>
                   <td style={td}>
                     <span style={{ backgroundColor: '#E3F2FD', color: '#1565C0', padding: '2px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700 }}>{p.code}</span>
                   </td>
