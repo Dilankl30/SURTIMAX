@@ -59,19 +59,16 @@ export function Header() {
             {isMobile && currentUser?.isAdmin && (
               <div style={{ position: 'relative' }}>
                 <button
-                  onClick={() => setNotifOpen(!notifOpen)}
+                  onClick={() => setCartOpen(!cartOpen)}
                   style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
                 >
                   <Bell size={18} />
                   {unreadNotifs > 0 && (
                     <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
-                      {unreadNotifs}
+                      {cartCount}
                     </span>
                   )}
                 </button>
-                {notifOpen && <NotificationsPanel onClose={() => setNotifOpen(false)} />}
-              </div>
-            )}
 
             {isMobile && (
               <button
