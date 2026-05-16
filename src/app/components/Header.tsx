@@ -185,7 +185,7 @@ export function Header() {
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} className="md:hidden">
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} className="md:hidden" aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}>
             <MobileNavBtn onClick={() => { setCartOpen(true); setMobileOpen(false); }}>🛒 Ver carrito {cartCount > 0 ? `(${cartCount})` : ''}</MobileNavBtn>
             <a href="https://wa.me/593989961041?text=Hola%20SURTIMAX%2C%20necesito%20informaci%C3%B3n" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', padding: '10px 8px', borderRadius: 6, fontSize: 14, display: 'block' }} onClick={() => setMobileOpen(false)}>💬 WhatsApp</a>
             <MobileNavBtn onClick={() => nav('catalog', true)}>📦 Catálogo</MobileNavBtn>
