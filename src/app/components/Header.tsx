@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { ShoppingCart, Bell, User, LogOut, Menu, X, Package, ClipboardList, LayoutDashboard, MessageCircle } from 'lucide-react';
 import { useStore } from '../store';
+import { useIsMobile } from './ui/use-mobile';
 import type { AppNotification } from '../store';
 import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
 
 export function Header() {
   const { view, setView, cart, setCartOpen, cartOpen, currentUser, logout, setAuthOpen, notifications } = useStore();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isMobile = useIsMobile();
   const [notifOpen, setNotifOpen] = useState(false);
 
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
   const unreadNotifs = notifications.filter(n => !n.read).length;
 
-  const nav = (v: typeof view, label: string, close = false) => {
+  const nav = (v: typeof view, close = false) => {
     setView(v);
     if (close) setMobileOpen(false);
   };
@@ -24,7 +26,7 @@ export function Header() {
 
           {/* Logo */}
           <button onClick={() => nav('catalog')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 44, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+            <img src={logoImg} alt="SURTIMAX" style={{ height: isMobile ? 34 : 44, objectFit: 'contain', filter: 'brightness(0) invert(1)', maxWidth: isMobile ? 120 : 170 }} />
           </button>
 
           {/* Desktop Nav */}
@@ -53,7 +55,7 @@ export function Header() {
           </nav>
 
           {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 6, flexShrink: 0 }}>
             {/* WhatsApp */}
             <a
               href="https://wa.me/593989961041?text=Hola%20SURTIMAX%2C%20necesito%20informaci%C3%B3n"
@@ -61,7 +63,7 @@ export function Header() {
               title="Contactar por WhatsApp"
               style={{ background: '#25D366', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center', textDecoration: 'none' }}
             >
-              <MessageCircle size={18} />
+              <MessageCircle size={isMobile ? 16 : 18} />
             </a>
 
             {/* Cart */}
@@ -69,7 +71,7 @@ export function Header() {
               onClick={() => setCartOpen(!cartOpen)}
               style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
             >
-              <ShoppingCart size={20} />
+              <ShoppingCart size={isMobile ? 18 : 20} />
               {cartCount > 0 && (
                 <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
                   {cartCount}
@@ -84,7 +86,7 @@ export function Header() {
                   onClick={() => setNotifOpen(!notifOpen)}
                   style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
                 >
-                  <Bell size={20} />
+                  <Bell size={isMobile ? 18 : 20} />
                   {unreadNotifs > 0 && (
                     <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
                       {unreadNotifs}
@@ -95,14 +97,14 @@ export function Header() {
               </div>
             )}
 
-            {/* User */}
-            {currentUser ? (
+            {/* User desktop */}
+            {!isMobile && (currentUser ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px' }}>
                   <div style={{ width: 26, height: 26, borderRadius: '50%', backgroundColor: currentUser.isAdmin ? '#FF9800' : '#4FC3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>
                     {currentUser.name[0]}
                   </div>
-                  <span style={{ color: 'white', fontSize: 13, fontWeight: 500 }} className="hidden md:block">
+                  <span style={{ color: 'white', fontSize: 13, fontWeight: 500 }}>
                     {currentUser.name.split(' ')[0]}
                     {currentUser.isAdmin && <span style={{ marginLeft: 4, fontSize: 10, backgroundColor: '#FF9800', padding: '1px 5px', borderRadius: 10 }}>Admin</span>}
                   </span>
@@ -122,7 +124,7 @@ export function Header() {
               >
                 <User size={16} /> Ingresar
               </button>
-            )}
+            ))}
 
             {/* Mobile menu */}
             <button
@@ -138,17 +140,24 @@ export function Header() {
         {/* Mobile nav */}
         {mobileOpen && (
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} className="md:hidden">
-            <MobileNavBtn onClick={() => nav('catalog', '', true)}>📦 Catálogo</MobileNavBtn>
+            <MobileNavBtn onClick={() => nav('catalog', true)}>📦 Catálogo</MobileNavBtn>
             {currentUser && !currentUser.isAdmin && (
-              <MobileNavBtn onClick={() => nav('my-quotes', '', true)}>📋 Mis Cotizaciones</MobileNavBtn>
+              <MobileNavBtn onClick={() => nav('my-quotes', true)}>📋 Mis Cotizaciones</MobileNavBtn>
             )}
             {currentUser?.isAdmin && (
               <>
-                <MobileNavBtn onClick={() => nav('admin-dashboard', '', true)}>📊 Dashboard</MobileNavBtn>
-                <MobileNavBtn onClick={() => nav('admin-products', '', true)}>📦 Productos</MobileNavBtn>
-                <MobileNavBtn onClick={() => nav('admin-quotes', '', true)}>📋 Cotizaciones Admin</MobileNavBtn>
+                <MobileNavBtn onClick={() => nav('admin-dashboard', true)}>📊 Dashboard</MobileNavBtn>
+                <MobileNavBtn onClick={() => nav('admin-products', true)}>📦 Productos</MobileNavBtn>
+                <MobileNavBtn onClick={() => nav('admin-quotes', true)}>📋 Cotizaciones Admin</MobileNavBtn>
               </>
             )}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', marginTop: 8, paddingTop: 8 }}>
+              {currentUser ? (
+                <MobileNavBtn onClick={() => { logout(); setMobileOpen(false); }}>🚪 Cerrar sesión</MobileNavBtn>
+              ) : (
+                <MobileNavBtn onClick={() => { setAuthOpen(true); setMobileOpen(false); }}>👤 Ingresar</MobileNavBtn>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -194,7 +203,7 @@ function NotificationsPanel({ onClose }: { onClose: () => void }) {
   return (
     <>
       <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={onClose} />
-      <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'white', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', width: 340, zIndex: 150, overflow: 'hidden', border: '1px solid #E3F2FD' }}>
+      <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'white', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', width: 'min(340px, calc(100vw - 24px))', zIndex: 150, overflow: 'hidden', border: '1px solid #E3F2FD' }}>
         <div style={{ padding: '14px 16px', borderBottom: '1px solid #E3F2FD', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFE' }}>
           <span style={{ fontWeight: 700, color: '#0D47A1', fontSize: 14 }}>🔔 Notificaciones</span>
           <button onClick={clearNotifications} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>
