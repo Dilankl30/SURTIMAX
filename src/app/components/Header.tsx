@@ -14,7 +14,7 @@ export function Header() {
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
   const unreadNotifs = notifications.filter(n => !n.read).length;
 
-  const nav = (v: typeof view, label: string, close = false) => {
+  const nav = (v: typeof view, close = false) => {
     setView(v);
     if (close) setMobileOpen(false);
   };
@@ -97,14 +97,14 @@ export function Header() {
               </div>
             )}
 
-            {/* User */}
-            {currentUser ? (
+            {/* User desktop */}
+            {!isMobile && (currentUser ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px' }}>
                   <div style={{ width: 26, height: 26, borderRadius: '50%', backgroundColor: currentUser.isAdmin ? '#FF9800' : '#4FC3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>
                     {currentUser.name[0]}
                   </div>
-                  <span style={{ color: 'white', fontSize: 13, fontWeight: 500 }} className="hidden md:block">
+                  <span style={{ color: 'white', fontSize: 13, fontWeight: 500 }}>
                     {currentUser.name.split(' ')[0]}
                     {currentUser.isAdmin && <span style={{ marginLeft: 4, fontSize: 10, backgroundColor: '#FF9800', padding: '1px 5px', borderRadius: 10 }}>Admin</span>}
                   </span>
@@ -124,7 +124,7 @@ export function Header() {
               >
                 <User size={isMobile ? 14 : 16} /> {isMobile ? 'Login' : 'Ingresar'}
               </button>
-            )}
+            ))}
 
             {/* Mobile menu */}
             <button
@@ -140,17 +140,24 @@ export function Header() {
         {/* Mobile nav */}
         {mobileOpen && (
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} className="md:hidden">
-            <MobileNavBtn onClick={() => nav('catalog', '', true)}>📦 Catálogo</MobileNavBtn>
+            <MobileNavBtn onClick={() => nav('catalog', true)}>📦 Catálogo</MobileNavBtn>
             {currentUser && !currentUser.isAdmin && (
-              <MobileNavBtn onClick={() => nav('my-quotes', '', true)}>📋 Mis Cotizaciones</MobileNavBtn>
+              <MobileNavBtn onClick={() => nav('my-quotes', true)}>📋 Mis Cotizaciones</MobileNavBtn>
             )}
             {currentUser?.isAdmin && (
               <>
-                <MobileNavBtn onClick={() => nav('admin-dashboard', '', true)}>📊 Dashboard</MobileNavBtn>
-                <MobileNavBtn onClick={() => nav('admin-products', '', true)}>📦 Productos</MobileNavBtn>
-                <MobileNavBtn onClick={() => nav('admin-quotes', '', true)}>📋 Cotizaciones Admin</MobileNavBtn>
+                <MobileNavBtn onClick={() => nav('admin-dashboard', true)}>📊 Dashboard</MobileNavBtn>
+                <MobileNavBtn onClick={() => nav('admin-products', true)}>📦 Productos</MobileNavBtn>
+                <MobileNavBtn onClick={() => nav('admin-quotes', true)}>📋 Cotizaciones Admin</MobileNavBtn>
               </>
             )}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', marginTop: 8, paddingTop: 8 }}>
+              {currentUser ? (
+                <MobileNavBtn onClick={() => { logout(); setMobileOpen(false); }}>🚪 Cerrar sesión</MobileNavBtn>
+              ) : (
+                <MobileNavBtn onClick={() => { setAuthOpen(true); setMobileOpen(false); }}>👤 Ingresar</MobileNavBtn>
+              )}
+            </div>
           </div>
         )}
       </div>
