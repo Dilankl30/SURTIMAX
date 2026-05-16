@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Search, ShoppingCart, Package } from 'lucide-react';
 import { useStore } from '../store';
+import { useIsMobile } from './ui/use-mobile';
 import type { Product } from '../store';
 
 const CAT_COLOR: Record<string, string> = {
@@ -18,6 +19,7 @@ export function Catalog() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [addedId, setAddedId] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const categories = useMemo(() => ['Todos', ...Array.from(new Set(products.map(p => p.category)))], [products]);
 
@@ -37,20 +39,20 @@ export function Catalog() {
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '16px 12px 90px' : '24px 16px' }}>
 
       {/* Hero */}
       <div style={{
         background: 'linear-gradient(135deg, #0D47A1 0%, #1565C0 60%, #1976D2 100%)',
-        borderRadius: 18, padding: '32px 40px', marginBottom: 28, color: 'white',
+        borderRadius: isMobile ? 14 : 18, padding: isMobile ? '20px 16px' : '32px 40px', marginBottom: isMobile ? 18 : 28, color: 'white',
         position: 'relative', overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', right: -10, top: -20, fontSize: 130, opacity: 0.08, userSelect: 'none' }}>🍬</div>
         <div style={{ position: 'absolute', right: 130, bottom: -30, fontSize: 110, opacity: 0.06, userSelect: 'none' }}>🍫</div>
         <div style={{ position: 'absolute', left: -20, bottom: -10, fontSize: 100, opacity: 0.05, userSelect: 'none' }}>🍭</div>
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <h1 style={{ margin: '0 0 6px', fontSize: 30, fontWeight: 800, letterSpacing: -0.5 }}>Catálogo de Productos</h1>
-          <p style={{ margin: '0 0 20px', opacity: 0.85, fontSize: 16 }}>Variedad y buen precio — Distribuidora SURTIMAX, Quito</p>
+          <h1 style={{ margin: '0 0 6px', fontSize: isMobile ? 24 : 30, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1.15 }}>Catálogo de Productos</h1>
+          <p style={{ margin: '0 0 16px', opacity: 0.85, fontSize: isMobile ? 14 : 16 }}>Variedad y buen precio — Distribuidora SURTIMAX, Quito</p>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <HeroBadge emoji="📦" label="Productos" value={products.filter(p => p.available).length} />
             <HeroBadge emoji="🗂️" label="Categorías" value={categories.length - 1} />
@@ -108,7 +110,7 @@ export function Catalog() {
           <p style={{ fontSize: 16 }}>No se encontraron productos</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(210px, 1fr))', gap: isMobile ? 12 : 18 }}>
           {filtered.map(product => (
             <ProductCard
               key={product.id}
@@ -126,12 +128,12 @@ export function Catalog() {
         <button
           onClick={() => setCartOpen(true)}
           style={{
-            position: 'fixed', bottom: 28, right: 28,
+            position: 'fixed', bottom: isMobile ? 14 : 28, right: isMobile ? 12 : 28,
             backgroundColor: '#0D47A1', color: 'white',
-            padding: '14px 22px', borderRadius: 50, border: 'none',
+            padding: isMobile ? '12px 16px' : '14px 22px', borderRadius: 50, border: 'none',
             boxShadow: '0 6px 24px rgba(13,71,161,0.45)',
             display: 'flex', alignItems: 'center', gap: 10,
-            cursor: 'pointer', zIndex: 50, fontSize: 14, fontWeight: 700,
+            cursor: 'pointer', zIndex: 50, fontSize: isMobile ? 13 : 14, fontWeight: 700, maxWidth: isMobile ? 'calc(100vw - 24px)' : undefined,
           }}
         >
           <ShoppingCart size={20} />
