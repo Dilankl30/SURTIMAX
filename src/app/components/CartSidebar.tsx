@@ -16,6 +16,7 @@ export function CartSidebar() {
   const { cart, cartOpen, setCartOpen, products, updateCartQuantity, removeFromCart, currentUser, setAuthOpen, createQuotation } = useStore();
   const [physicalClient, setPhysicalClient] = useState<QuotationClientData>(emptyPhysicalClient);
   const [clientError, setClientError] = useState('');
+  const [quoteStep, setQuoteStep] = useState<'summary' | 'client'>('summary');
 
   const cartItems = cart.map(item => ({
     ...item,
@@ -43,6 +44,10 @@ export function CartSidebar() {
       setAuthOpen(true);
       return;
     }
+    if (currentUser.isAdmin && quoteStep === 'summary') {
+      setQuoteStep('client');
+      return;
+    }
     if (!validatePhysicalClient()) {
       setClientError('Completa todos los datos del cliente físico para generar la cotización.');
       return;
@@ -61,6 +66,7 @@ export function CartSidebar() {
       clientEmail: physicalClient.clientEmail?.trim(),
     } : undefined);
     setPhysicalClient(emptyPhysicalClient);
+    setQuoteStep('summary');
     setCartOpen(false);
   };
 
@@ -68,8 +74,8 @@ export function CartSidebar() {
 
   return (
     <>
-      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 200 }} onClick={() => setCartOpen(false)} />
-      <div style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: Math.min(420, window.innerWidth), backgroundColor: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.2)' }}>
+      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 200 }} onClick={() => { setCartOpen(false); setQuoteStep('summary'); }} />
+      <div style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: 'min(100vw, 460px)', maxWidth: '100vw', backgroundColor: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.2)' }}>
 
         {/* Header */}
         <div style={{ padding: '20px 24px', background: 'linear-gradient(135deg, #0D47A1, #1976D2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'white' }}>
@@ -80,7 +86,7 @@ export function CartSidebar() {
               <div style={{ fontSize: 12, opacity: 0.85 }}>{cart.reduce((s, i) => s + i.quantity, 0)} unidades · {cartItems.length} producto{cartItems.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
-          <button onClick={() => setCartOpen(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center' }}>
+          <button onClick={() => { setCartOpen(false); setQuoteStep('summary'); }} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center' }}>
             <X size={18} />
           </button>
         </div>
@@ -94,7 +100,7 @@ export function CartSidebar() {
               <p style={{ fontSize: 13, margin: 0 }}>Agrega productos del catálogo para cotizar</p>
             </div>
           ) : cartItems.map(item => (
-            <div key={item.productId} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F5F5F5' }}>
+            <div key={item.productId} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F5F5F5', flexWrap: 'wrap' }}>
               <div style={{ width: 46, height: 46, borderRadius: 10, background: 'linear-gradient(135deg, #E3F2FD, #BBDEFB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
                 🍬
               </div>
@@ -146,10 +152,14 @@ export function CartSidebar() {
               </div>
             )}
 
-            {currentUser?.isAdmin && (
+            {currentUser?.isAdmin && quoteStep === 'client' && (
               <div style={{ backgroundColor: '#F8FAFE', border: '1px solid #D0E8FF', borderRadius: 12, padding: '12px', marginBottom: 12 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0D47A1', marginBottom: 10 }}>
-                  Datos del cliente físico
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#0D47A1' }}>Datos del cliente físico</div>
+                    <div style={{ fontSize: 11, color: '#78909C', marginTop: 2 }}>Completa estos datos para generar la cotización.</div>
+                  </div>
+                  <button onClick={() => { setQuoteStep('summary'); setClientError(''); }} style={{ background: 'white', border: '1px solid #BBDEFB', color: '#0D47A1', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>Volver</button>
                 </div>
                 <div style={{ display: 'grid', gap: 10 }}>
                   <ClientField label="Nombre completo / Razón social *" icon={<User size={13} />}>
@@ -180,7 +190,7 @@ export function CartSidebar() {
               onClick={handleQuote}
               style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #0D47A1, #1976D2)', color: 'white', cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: '0 4px 16px rgba(13,71,161,0.3)', marginBottom: 10 }}
             >
-              {currentUser?.isAdmin ? '📋 Generar Cotización para Cliente' : currentUser ? '📋 Generar Cotización' : '🔐 Registrarse y Cotizar'}
+              {currentUser?.isAdmin ? (quoteStep === 'summary' ? '🧾 Realizar Cotización' : '📋 Generar Cotización para Cliente') : currentUser ? '📋 Generar Cotización' : '🔐 Registrarse y Cotizar'}
             </button>
 
             <a

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Printer, ArrowLeft, MessageCircle, Edit2, Save, X } from 'lucide-react';
 import { useStore } from '../store';
 import type { QuotationClientData } from '../store';
-import { createQuotationPdfBlob } from '../utils/quotationPdf';
+import { createQuotationPdfBlob, createQuotationPdfBlobFromElement } from '../utils/quotationPdf';
 import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
 
 export function QuotationDetail() {
@@ -71,14 +71,14 @@ export function QuotationDetail() {
     setEditingClient(false);
   };
 
-  const clientWANum = quote.clientPhone.replace(/[^0-9]/g, '');
+  const clientWANum = normalizeWhatsAppNumber(quote.clientPhone);
   const clientWAMsg = encodeURIComponent(
     `Hola ${quote.clientName}, su cotización *${quote.number}* por un total de *$${finalTotal.toFixed(2)}* está lista.\n\nProductos:\n` +
     quote.items.map(i => `• ${i.description} x${i.quantity} = $${(i.quantity * i.unitPrice).toFixed(2)}`).join('\n') +
     `\n\n_SURTIMAX - variedad y buen precio_`
   );
   const adminWAMsg = encodeURIComponent(`Hola SURTIMAX, quiero información sobre mi cotización ${quote.number}`);
-  const clientWAUrl = `https://wa.me/593${clientWANum.startsWith('0') ? clientWANum.slice(1) : clientWANum}?text=${clientWAMsg}`;
+  const clientWAUrl = `https://wa.me/${clientWANum}?text=${clientWAMsg}`;
 
   const downloadPdf = (blob: Blob, fileName: string) => {
     const url = URL.createObjectURL(blob);
@@ -93,7 +93,10 @@ export function QuotationDetail() {
 
   const handleSendClientWhatsApp = async () => {
     const printableQuote = { ...quote, discount, totalCotizado, subtotal, iva, finalTotal };
-    const pdfBlob = createQuotationPdfBlob(printableQuote);
+    const documentElement = document.getElementById('quotation-document');
+    const pdfBlob = documentElement
+      ? await createQuotationPdfBlobFromElement(documentElement)
+      : createQuotationPdfBlob(printableQuote);
     const fileName = `${quote.number}.pdf`;
     const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
@@ -317,6 +320,13 @@ export function QuotationDetail() {
       `}</style>
     </div>
   );
+}
+
+function normalizeWhatsAppNumber(phone: string) {
+  const digits = phone.replace(/[^0-9]/g, '');
+  if (digits.startsWith('593')) return digits;
+  if (digits.startsWith('0')) return `593${digits.slice(1)}`;
+  return `593${digits}`;
 }
 
 function ClientRow({ label, value }: { label: string; value: string }) {
