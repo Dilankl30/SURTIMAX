@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { fetchProductsFromSupabase, isSupabaseConfigured, requestEmailLoginCode, requestPasswordRecovery, verifyEmailLoginCode } from './lib/supabase';
+import { deleteProductFromSupabase, deleteQuotationFromSupabase, fetchProductsFromSupabase, fetchProfilesFromSupabase, fetchQuotationsFromSupabase, isSupabaseConfigured, productFromRow, profileFromRow, requestEmailLoginCode, requestPasswordRecovery, saveProductToSupabase, saveProfileToSupabase, saveQuotationToSupabase, updateQuotationInSupabase, verifyEmailLoginCode } from './lib/supabase';
 
 export type ViewType =
   | 'catalog'
@@ -159,10 +159,22 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | null>(null);
 
+const SESSION_KEY = 'surtimax.currentUser';
+
+function getStoredUser() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) as User : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<ViewType>('catalog');
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => getStoredUser());
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -174,20 +186,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     fetchProductsFromSupabase()
-      .then(rows => setProducts(rows.map(row => ({
-        id: row.id,
-        code: row.code,
-        name: row.name,
-        category: row.category,
-        price: Number(row.price),
-        presentation: row.presentation,
-        unitsPerPack: row.units_per_pack,
-        stock: row.stock,
-        available: row.available,
-        imageUrl: row.image_url ?? '',
-      }))))
+      .then(rows => setProducts(rows.map(productFromRow)))
       .catch(error => console.warn('No se pudieron cargar productos desde Supabase', error));
+    fetchProfilesFromSupabase()
+      .then(rows => setUsers(prev => {
+        const remoteUsers = rows.map(profileFromRow).map(remote => ({
+          ...remote,
+          password: prev.find(user => user.email.toLowerCase() === remote.email.toLowerCase())?.password ?? remote.password,
+        }));
+        return remoteUsers.length ? remoteUsers : prev;
+      }))
+      .catch(error => console.warn('No se pudieron cargar perfiles desde Supabase', error));
+    fetchQuotationsFromSupabase()
+      .then(remoteQuotes => { if (remoteQuotes.length) setQuotations(remoteQuotes); })
+      .catch(error => console.warn('No se pudieron cargar cotizaciones desde Supabase', error));
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (currentUser) window.localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+    else window.localStorage.removeItem(SESSION_KEY);
+  }, [currentUser]);
 
   const login = useCallback((email: string, password: string): boolean => {
     const user = users.find(u => u.email === email && u.password === password);
@@ -215,21 +234,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => { setCurrentUser(null); setView('catalog'); }, []);
 
   const register = useCallback((data: Omit<User, 'id' | 'isAdmin'>) => {
-    const newUser: User = { ...data, id: `u${Date.now()}`, isAdmin: false };
+    const newUser: User = { ...data, id: crypto.randomUUID?.() ?? `u${Date.now()}`, isAdmin: false };
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
+    if (isSupabaseConfigured) saveProfileToSupabase(newUser).catch(error => console.warn('No se pudo guardar el perfil en Supabase', error));
   }, []);
 
   const addProduct = useCallback((p: Omit<Product, 'id'>) => {
-    setProducts(prev => [...prev, { ...p, id: `p${Date.now()}` }]);
+    const newProduct = { ...p, id: `p${Date.now()}` };
+    setProducts(prev => [...prev, newProduct]);
+    if (isSupabaseConfigured) saveProductToSupabase(newProduct).catch(error => console.warn('No se pudo guardar el producto en Supabase', error));
   }, []);
 
   const updateProduct = useCallback((id: string, updates: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    setProducts(prev => {
+      const next = prev.map(p => p.id === id ? { ...p, ...updates } : p);
+      const updated = next.find(p => p.id === id);
+      if (updated && isSupabaseConfigured) saveProductToSupabase(updated).catch(error => console.warn('No se pudo actualizar el producto en Supabase', error));
+      return next;
+    });
   }, []);
 
   const deleteProduct = useCallback((id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
+    if (isSupabaseConfigured) deleteProductFromSupabase(id).catch(error => console.warn('No se pudo eliminar el producto en Supabase', error));
   }, []);
 
   const addToCart = useCallback((productId: string, quantity = 1) => {
@@ -286,6 +314,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     setQuotations(prev => [...prev, newQuote]);
+    if (isSupabaseConfigured) saveQuotationToSupabase(newQuote).catch(error => console.warn('No se pudo guardar la cotización en Supabase', error));
     setSelectedQuotationId(newQuote.id);
     setNotifications(prev => [{
       id: `n${Date.now()}`,
@@ -301,10 +330,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateQuotation = useCallback((id: string, updates: Partial<Quotation>) => {
     setQuotations(prev => prev.map(q => q.id === id ? { ...q, ...updates } : q));
+    if (isSupabaseConfigured) updateQuotationInSupabase(id, updates).catch(error => console.warn('No se pudo actualizar la cotización en Supabase', error));
   }, []);
 
   const deleteQuotation = useCallback((id: string) => {
     setQuotations(prev => prev.filter(q => q.id !== id));
+    if (isSupabaseConfigured) deleteQuotationFromSupabase(id).catch(error => console.warn('No se pudo eliminar la cotización en Supabase', error));
   }, []);
 
   const markNotificationRead = useCallback((id: string) => {
