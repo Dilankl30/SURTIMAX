@@ -31,6 +31,19 @@ export default defineConfig({
     },
   },
 
+
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          mui: ['@mui/material', '@mui/icons-material'],
+        },
+      },
+    },
+  },
+
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 })
