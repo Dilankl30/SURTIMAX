@@ -94,9 +94,16 @@ export function QuotationDetail() {
   const handleSendClientWhatsApp = async () => {
     const printableQuote = { ...quote, discount, totalCotizado, subtotal, iva, finalTotal };
     const documentElement = document.getElementById('quotation-document');
-    const pdfBlob = documentElement
-      ? await createQuotationPdfBlobFromElement(documentElement)
-      : createQuotationPdfBlob(printableQuote);
+    let pdfBlob: Blob;
+
+    try {
+      pdfBlob = documentElement
+        ? await createQuotationPdfBlobFromElement(documentElement)
+        : createQuotationPdfBlob(printableQuote);
+    } catch {
+      pdfBlob = createQuotationPdfBlob(printableQuote);
+    }
+
     const fileName = `${quote.number}.pdf`;
     const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
 

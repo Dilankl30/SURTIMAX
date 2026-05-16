@@ -129,7 +129,7 @@ export function CartSidebar() {
 
         {/* Footer */}
         {cartItems.length > 0 && (
-          <div style={{ padding: '16px 20px 24px', borderTop: '1px solid #E3F2FD' }}>
+          <div style={{ padding: '16px 20px 24px', borderTop: '1px solid #E3F2FD', maxHeight: quoteStep === 'client' ? 'min(72vh, calc(100vh - 104px))' : 'none', overflowY: quoteStep === 'client' ? 'auto' : 'visible', WebkitOverflowScrolling: 'touch', flexShrink: 0 }}>
             {/* Totals */}
             <div style={{ backgroundColor: '#F8FAFE', borderRadius: 12, padding: '14px 16px', marginBottom: 16, border: '1px solid #E3F2FD' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13, color: '#546E7A' }}>
