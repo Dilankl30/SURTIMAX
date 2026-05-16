@@ -21,12 +21,12 @@ export function Header() {
 
   return (
     <header style={{ backgroundColor: '#0D47A1', boxShadow: '0 2px 12px rgba(0,0,0,0.3)', position: 'sticky', top: 0, zIndex: 100 }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+      <div style={{ width: '100%', maxWidth: 1280, margin: '0 auto', padding: isMobile ? '0 10px' : '0 16px', boxSizing: 'border-box', overflowX: 'clip' }}>
+        <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, gap: isMobile ? 8 : 12, minWidth: 0 }}>
 
           {/* Logo */}
-          <button onClick={() => nav('catalog')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: isMobile ? 34 : 44, objectFit: 'contain', filter: 'brightness(0) invert(1)', maxWidth: isMobile ? 120 : 170 }} />
+          <button onClick={() => nav('catalog')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, minWidth: 0 }}>
+            <img src={logoImg} alt="SURTIMAX" style={{ height: isMobile ? 30 : 44, objectFit: 'contain', filter: 'brightness(0) invert(1)', maxWidth: isMobile ? 96 : 170, width: '100%' }} />
           </button>
 
           {/* Desktop Nav */}
@@ -55,27 +55,29 @@ export function Header() {
           </nav>
 
           {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 3 : 6, flexShrink: 0, minWidth: 0, whiteSpace: 'nowrap', marginLeft: 'auto' }}>
             {isMobile && currentUser?.isAdmin && (
               <div style={{ position: 'relative' }}>
                 <button
                   onClick={() => setCartOpen(!cartOpen)}
-                  style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+                  style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
                 >
-                  <Bell size={18} />
+                  <Bell size={17} />
                   {unreadNotifs > 0 && (
                     <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
                       {cartCount}
                     </span>
                   )}
                 </button>
+              </div>
+            )}
 
             {isMobile && (
               <button
                 onClick={() => setCartOpen(!cartOpen)}
-                style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+                style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
               >
-                <ShoppingCart size={18} />
+                <ShoppingCart size={17} />
                 {cartCount > 0 && (
                   <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
                     {cartCount}
@@ -86,11 +88,11 @@ export function Header() {
 
             {isMobile && (
               currentUser ? (
-                <div style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: currentUser.isAdmin ? '#FF9800' : '#4FC3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: currentUser.isAdmin ? '#FF9800' : '#4FC3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white', flexShrink: 0 }}>
                   {currentUser.name[0]}
                 </div>
               ) : (
-                <button onClick={() => setAuthOpen(true)} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}>
+                <button onClick={() => setAuthOpen(true)} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}>
                   <User size={16} />
                 </button>
               )
@@ -103,7 +105,7 @@ export function Header() {
                   href="https://wa.me/593989961041?text=Hola%20SURTIMAX%2C%20necesito%20informaci%C3%B3n"
                   target="_blank" rel="noopener noreferrer"
                   title="Contactar por WhatsApp"
-                  style={{ background: '#25D366', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+                  style={{ background: '#25D366', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center', textDecoration: 'none' }}
                 >
                   <MessageCircle size={18} />
                 </a>
@@ -111,7 +113,7 @@ export function Header() {
                 {/* Cart */}
                 <button
                   onClick={() => setCartOpen(!cartOpen)}
-                  style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+                  style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
                 >
                   <ShoppingCart size={20} />
                   {cartCount > 0 && (
@@ -126,7 +128,7 @@ export function Header() {
                   <div style={{ position: 'relative' }}>
                     <button
                       onClick={() => setNotifOpen(!notifOpen)}
-                      style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+                      style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
                     >
                       <Bell size={20} />
                       {unreadNotifs > 0 && (
@@ -153,7 +155,7 @@ export function Header() {
                     </div>
                     <button
                       onClick={logout}
-                      style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+                      style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
                       title="Cerrar sesión"
                     >
                       <LogOut size={18} />
@@ -173,8 +175,8 @@ export function Header() {
             {/* Mobile menu */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
-              className="md:hidden"
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
+              className="md:hidden" aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
