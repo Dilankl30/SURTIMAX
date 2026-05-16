@@ -21,12 +21,12 @@ export function Header() {
 
   return (
     <header style={{ backgroundColor: '#0D47A1', boxShadow: '0 2px 12px rgba(0,0,0,0.3)', position: 'sticky', top: 0, zIndex: 100 }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+      <div style={{ width: '100%', maxWidth: 1280, margin: '0 auto', padding: isMobile ? '0 10px' : '0 16px', boxSizing: 'border-box', overflowX: 'clip' }}>
+        <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, gap: isMobile ? 8 : 12, minWidth: 0 }}>
 
           {/* Logo */}
-          <button onClick={() => nav('catalog')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: isMobile ? 34 : 44, objectFit: 'contain', filter: 'brightness(0) invert(1)', maxWidth: isMobile ? 120 : 170 }} />
+          <button onClick={() => nav('catalog')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, minWidth: 0 }}>
+            <img src={logoImg} alt="SURTIMAX" style={{ height: isMobile ? 32 : 44, objectFit: 'contain', filter: 'brightness(0) invert(1)', maxWidth: isMobile ? 112 : 170, width: '100%' }} />
           </button>
 
           {/* Desktop Nav */}
@@ -55,7 +55,7 @@ export function Header() {
           </nav>
 
           {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 6, flexShrink: 0, minWidth: 0, whiteSpace: 'nowrap' }}>
             {isMobile && currentUser?.isAdmin && (
               <div style={{ position: 'relative' }}>
                 <button
@@ -176,7 +176,7 @@ export function Header() {
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
-              className="md:hidden"
+              className="md:hidden" aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -185,7 +185,7 @@ export function Header() {
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} className="md:hidden">
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} className="md:hidden" aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}>
             <MobileNavBtn onClick={() => { setCartOpen(true); setMobileOpen(false); }}>🛒 Ver carrito {cartCount > 0 ? `(${cartCount})` : ''}</MobileNavBtn>
             <a href="https://wa.me/593989961041?text=Hola%20SURTIMAX%2C%20necesito%20informaci%C3%B3n" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', padding: '10px 8px', borderRadius: 6, fontSize: 14, display: 'block' }} onClick={() => setMobileOpen(false)}>💬 WhatsApp</a>
             <MobileNavBtn onClick={() => nav('catalog', true)}>📦 Catálogo</MobileNavBtn>
