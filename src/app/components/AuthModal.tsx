@@ -3,8 +3,8 @@ import { X, User, Lock, Phone, MapPin, CreditCard, Mail } from 'lucide-react';
 import { useStore } from '../store';
 
 export function AuthModal() {
-  const { authOpen, setAuthOpen, login, register } = useStore();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const { authOpen, setAuthOpen, login, register, requestLoginCode, verifyLoginCode, requestPasswordReset } = useStore();
+  const [mode, setMode] = useState<'login' | 'register' | 'code' | 'forgot'>('login');
   const [error, setError] = useState('');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPass, setLoginPass] = useState('');
@@ -14,16 +14,50 @@ export function AuthModal() {
   const [regPhone, setRegPhone] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPass, setRegPass] = useState('');
+  const [emailCode, setEmailCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
 
   if (!authOpen) return null;
 
-  const switchMode = (m: 'login' | 'register') => { setMode(m); setError(''); };
+  const switchMode = (m: 'login' | 'register' | 'code' | 'forgot') => { setMode(m); setError(''); setCodeSent(false); setEmailCode(''); };
 
   const handleLogin = () => {
     if (!loginEmail || !loginPass) { setError('Completa todos los campos'); return; }
     const ok = login(loginEmail, loginPass);
     if (ok) { setAuthOpen(false); setError(''); }
     else setError('Correo o contraseña incorrectos');
+  };
+
+  const handleSendCode = async () => {
+    if (!loginEmail) { setError('Ingresa tu correo electrónico'); return; }
+    try {
+      await requestLoginCode(loginEmail);
+      setCodeSent(true);
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo enviar el código');
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!loginEmail || !emailCode) { setError('Ingresa correo y código'); return; }
+    try {
+      const ok = await verifyLoginCode(loginEmail, emailCode);
+      if (ok) { setAuthOpen(false); setError(''); }
+      else setError('Correo verificado, pero no existe un perfil local para este usuario.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Código inválido o expirado');
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!loginEmail) { setError('Ingresa tu correo electrónico'); return; }
+    try {
+      await requestPasswordReset(loginEmail);
+      setError('Te enviamos un enlace/código de recuperación a tu correo.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo solicitar la recuperación');
+    }
   };
 
   const handleRegister = () => {
@@ -49,10 +83,10 @@ export function AuthModal() {
           </button>
           <div style={{ fontSize: 36, marginBottom: 8 }}>🔐</div>
           <h2 style={{ margin: '0 0 4px', fontWeight: 800, fontSize: 20 }}>
-            {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+            {mode === 'register' ? 'Crear Cuenta' : mode === 'code' ? 'Código por Correo' : mode === 'forgot' ? 'Recuperar Contraseña' : 'Iniciar Sesión'}
           </h2>
           <p style={{ margin: 0, opacity: 0.85, fontSize: 13 }}>
-            {mode === 'login' ? 'Accede a tu cuenta SURTIMAX' : 'Regístrate para cotizar productos'}
+            {mode === 'register' ? 'Regístrate para cotizar productos' : mode === 'code' ? 'Recibe un código seguro en tu correo' : mode === 'forgot' ? 'Solicita la recuperación por correo' : 'Accede a tu cuenta SURTIMAX'}
           </p>
         </div>
 
@@ -86,15 +120,37 @@ export function AuthModal() {
               </Field>
 
               <div style={{ backgroundColor: '#E3F2FD', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: '#1565C0', lineHeight: 1.7, border: '1px solid #BBDEFB' }}>
-                <strong>Demo usuario:</strong> juan@example.com / demo123<br />
-                <strong>Demo admin:</strong> admin@surtimax.com / admin123
+                <strong>Admin inicial:</strong> admin@surtimax.com / admin123
               </div>
 
               <button onClick={handleLogin} style={btn}>Ingresar a mi cuenta →</button>
 
-              <button onClick={() => switchMode('register')} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>
-                ¿No tienes cuenta? Regístrate gratis
-              </button>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button onClick={() => switchMode('code')} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>Ingresar con código</button>
+                <button onClick={() => switchMode('forgot')} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>Olvidé mi contraseña</button>
+                <button onClick={() => switchMode('register')} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>Registrarme</button>
+              </div>
+            </div>
+          ) : mode === 'code' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Field label="Correo electrónico" icon={<Mail size={15} />}>
+                <input value={loginEmail} onChange={e => setLoginEmail(e.target.value)} type="email" placeholder="correo@ejemplo.com" style={inp} />
+              </Field>
+              {codeSent && (
+                <Field label="Código recibido" icon={<Lock size={15} />}>
+                  <input value={emailCode} onChange={e => setEmailCode(e.target.value)} placeholder="123456" style={inp} onKeyDown={e => e.key === 'Enter' && handleVerifyCode()} />
+                </Field>
+              )}
+              <button onClick={codeSent ? handleVerifyCode : handleSendCode} style={btn}>{codeSent ? 'Verificar e ingresar →' : 'Enviar código al correo →'}</button>
+              <button onClick={() => switchMode('login')} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>Volver al login</button>
+            </div>
+          ) : mode === 'forgot' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Field label="Correo electrónico" icon={<Mail size={15} />}>
+                <input value={loginEmail} onChange={e => setLoginEmail(e.target.value)} type="email" placeholder="correo@ejemplo.com" style={inp} />
+              </Field>
+              <button onClick={handleForgotPassword} style={btn}>Enviar recuperación →</button>
+              <button onClick={() => switchMode('login')} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>Volver al login</button>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
