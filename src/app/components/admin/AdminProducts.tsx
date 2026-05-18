@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, Search, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Search, AlertTriangle, Image as ImageIcon, Camera, RotateCcw } from 'lucide-react';
 import { useStore } from '../../store';
 import type { Product } from '../../store';
 
@@ -15,6 +15,12 @@ const CAT_EMOJI: Record<string, string> = {
   Chicles: '🫧', Confites: '🍭', Gomas: '🐻', Otros: '📦',
 };
 
+type ImageAdjust = { zoom: number; offsetX: number; offsetY: number };
+
+const DEFAULT_IMAGE_ADJUST: ImageAdjust = { zoom: 1, offsetX: 0, offsetY: 0 };
+
+const CATALOG_IMAGE_SIZE = { width: 560, height: 260 };
+
 const EMPTY: Omit<Product, 'id'> = {
   code: '', name: '', category: 'Caramelos', price: 0, presentation: '', unitsPerPack: 0, stock: 0, available: true, imageUrl: '',
 };
@@ -25,6 +31,7 @@ export function AdminProducts() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Product, 'id'>>(EMPTY);
+  const [imageAdjust, setImageAdjust] = useState<ImageAdjust>(DEFAULT_IMAGE_ADJUST);
   const [filterCat, setFilterCat] = useState('Todos');
 
   const filtered = products.filter(p => {
@@ -36,26 +43,33 @@ export function AdminProducts() {
   const startEdit = (p: Product) => {
     setEditId(p.id);
     setForm({ code: p.code, name: p.name, category: p.category, price: p.price, presentation: p.presentation, unitsPerPack: p.unitsPerPack, stock: p.stock, available: p.available, imageUrl: p.imageUrl ?? '' });
+    setImageAdjust(DEFAULT_IMAGE_ADJUST);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.code.trim() || !form.name.trim()) return;
-    if (editId) { updateProduct(editId, form); setEditId(null); }
-    else addProduct(form);
+    const imageUrl = form.imageUrl ? await cropImageForCatalog(form.imageUrl, imageAdjust) : '';
+    const productToSave = { ...form, imageUrl };
+    if (editId) { updateProduct(editId, productToSave); setEditId(null); }
+    else addProduct(productToSave);
     setForm(EMPTY);
+    setImageAdjust(DEFAULT_IMAGE_ADJUST);
     setShowForm(false);
   };
 
-  const handleCancel = () => { setShowForm(false); setEditId(null); setForm(EMPTY); };
+  const handleCancel = () => { setShowForm(false); setEditId(null); setForm(EMPTY); setImageAdjust(DEFAULT_IMAGE_ADJUST); };
 
   const set = <K extends keyof typeof form>(key: K, val: (typeof form)[K]) => setForm(f => ({ ...f, [key]: val }));
 
   const handleImageUpload = (file?: File) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => set('imageUrl', String(reader.result || ''));
+    reader.onload = () => {
+      set('imageUrl', String(reader.result || ''));
+      setImageAdjust(DEFAULT_IMAGE_ADJUST);
+    };
     reader.readAsDataURL(file);
   };
 
@@ -69,7 +83,7 @@ export function AdminProducts() {
           <p style={{ color: '#78909C', margin: 0, fontSize: 13 }}>{products.length} productos · {products.filter(p => p.stock <= 10).length} con stock bajo</p>
         </div>
         <button
-          onClick={() => { setShowForm(true); setEditId(null); setForm(EMPTY); }}
+          onClick={() => { setShowForm(true); setEditId(null); setForm(EMPTY); setImageAdjust(DEFAULT_IMAGE_ADJUST); }}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}
         >
           <Plus size={17} /> Nuevo Producto
@@ -104,9 +118,15 @@ export function AdminProducts() {
               </div>
               <div>
                 <label style={lbl}>Foto / imagen del producto</label>
-                <input type="file" accept="image/*" onChange={e => handleImageUpload(e.target.files?.[0])} style={{ ...inp, padding: 8, backgroundColor: 'white' }} />
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e.target.files?.[0])} style={{ ...inp, padding: 8, backgroundColor: 'white', flex: '1 1 220px' }} />
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 12px', borderRadius: 8, border: '2px solid #BBDEFB', background: 'white', color: '#0D47A1', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                    <Camera size={15} /> Tomar foto
+                    <input type="file" accept="image/*" capture="environment" onChange={e => handleImageUpload(e.target.files?.[0])} style={{ display: 'none' }} />
+                  </label>
+                </div>
                 {form.imageUrl && (
-                  <button onClick={() => set('imageUrl', '')} style={{ marginTop: 8, background: 'none', border: 'none', color: '#EF5350', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0 }}>Quitar imagen</button>
+                  <button onClick={() => { set('imageUrl', ''); setImageAdjust(DEFAULT_IMAGE_ADJUST); }} style={{ marginTop: 8, background: 'none', border: 'none', color: '#EF5350', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0 }}>Quitar imagen</button>
                 )}
               </div>
             </div>
@@ -126,8 +146,11 @@ export function AdminProducts() {
                   <span style={{ backgroundColor: '#FFEBEE', color: '#C62828', borderRadius: 20, padding: '4px 10px', fontSize: 12, fontWeight: 700 }}>No visible en catálogo</span>
                 )}
               </div>
+              {form.imageUrl && (
+                <ImageAdjustmentControls adjust={imageAdjust} onChange={setImageAdjust} />
+              )}
               <div style={{ maxWidth: 280 }}>
-                <CatalogPreviewCard product={form} />
+                <CatalogPreviewCard product={form} imageAdjust={imageAdjust} />
               </div>
             </div>
           </div>
@@ -213,7 +236,31 @@ export function AdminProducts() {
   );
 }
 
-function CatalogPreviewCard({ product }: { product: Omit<Product, 'id'> }) {
+function ImageAdjustmentControls({ adjust, onChange }: { adjust: ImageAdjust; onChange: (adjust: ImageAdjust) => void }) {
+  const update = <K extends keyof ImageAdjust>(key: K, value: ImageAdjust[K]) => onChange({ ...adjust, [key]: value });
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12, marginBottom: 14, padding: 12, borderRadius: 12, backgroundColor: '#EEF6FF', border: '1px solid #BBDEFB' }}>
+      <RangeControl label={`Tamaño ${Math.round(adjust.zoom * 100)}%`} min={0.8} max={2} step={0.05} value={adjust.zoom} onChange={value => update('zoom', value)} />
+      <RangeControl label="Mover horizontal" min={-100} max={100} step={1} value={adjust.offsetX} onChange={value => update('offsetX', value)} />
+      <RangeControl label="Mover vertical" min={-100} max={100} step={1} value={adjust.offsetY} onChange={value => update('offsetY', value)} />
+      <button type="button" onClick={() => onChange(DEFAULT_IMAGE_ADJUST)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'end', padding: '9px 12px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+        <RotateCcw size={14} /> Restablecer
+      </button>
+    </div>
+  );
+}
+
+function RangeControl({ label, min, max, step, value, onChange }: { label: string; min: number; max: number; step: number; value: number; onChange: (value: number) => void }) {
+  return (
+    <label style={{ display: 'grid', gap: 6, fontSize: 12, color: '#455A64', fontWeight: 700 }}>
+      {label}
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} style={{ width: '100%', accentColor: '#0D47A1' }} />
+    </label>
+  );
+}
+
+function CatalogPreviewCard({ product, imageAdjust }: { product: Omit<Product, 'id'>; imageAdjust: ImageAdjust }) {
   const color = CAT_COLOR[product.category] || '#546E7A';
   const emoji = CAT_EMOJI[product.category] || '📦';
   const name = product.name.trim() || 'Nombre del producto';
@@ -224,7 +271,7 @@ function CatalogPreviewCard({ product }: { product: Omit<Product, 'id'> }) {
     <div style={{ backgroundColor: 'white', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', border: '1px solid #F0F4F8' }}>
       <div style={{ height: 130, background: `linear-gradient(135deg, ${color}18 0%, ${color}35 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={product.imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `translate(${imageAdjust.offsetX / 4}%, ${imageAdjust.offsetY / 4}%) scale(${imageAdjust.zoom})`, transformOrigin: 'center', transition: 'transform 0.15s' }} />
         ) : (
           <span style={{ fontSize: 54 }}>{emoji}</span>
         )}
@@ -261,6 +308,37 @@ function CatalogPreviewCard({ product }: { product: Omit<Product, 'id'> }) {
       </div>
     </div>
   );
+}
+
+
+function cropImageForCatalog(src: string, adjust: ImageAdjust): Promise<string> {
+  if (!src.startsWith('data:image/')) return Promise.resolve(src);
+
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = CATALOG_IMAGE_SIZE.width;
+      canvas.height = CATALOG_IMAGE_SIZE.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { resolve(src); return; }
+
+      const baseScale = Math.max(canvas.width / img.width, canvas.height / img.height) * adjust.zoom;
+      const drawWidth = img.width * baseScale;
+      const drawHeight = img.height * baseScale;
+      const maxPanX = Math.max(0, (drawWidth - canvas.width) / 2);
+      const maxPanY = Math.max(0, (drawHeight - canvas.height) / 2);
+      const dx = (canvas.width - drawWidth) / 2 + (adjust.offsetX / 100) * maxPanX;
+      const dy = (canvas.height - drawHeight) / 2 + (adjust.offsetY / 100) * maxPanY;
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
 }
 
 function FField({ label, value, onChange, placeholder, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
