@@ -172,8 +172,12 @@ function ProductCard({ product, onAddToCart, isAdded, inCart }: {
       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 12px rgba(0,0,0,0.07)'; }}
     >
       {/* Image area */}
-      <div style={{ height: 130, background: `linear-gradient(135deg, ${color}18 0%, ${color}35 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-        <span style={{ fontSize: 54 }}>{emoji}</span>
+      <div style={{ height: 130, background: `linear-gradient(135deg, ${color}18 0%, ${color}35 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <span style={{ fontSize: 54 }}>{emoji}</span>
+        )}
         <div style={{ position: 'absolute', top: 10, left: 10, backgroundColor: color, color: 'white', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>
           {product.category}
         </div>

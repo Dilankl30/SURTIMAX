@@ -30,7 +30,7 @@ export function Header() {
           </button>
 
           {/* Desktop Nav */}
-          <nav style={{ display: 'flex', gap: 4, alignItems: 'center', flex: 1, justifyContent: 'center' }} className="hidden md:flex">
+          <nav style={{ display: isMobile ? 'none' : 'flex', gap: 4, alignItems: 'center', flex: 1, justifyContent: 'center' }}>
             <NavBtn active={view === 'catalog'} onClick={() => nav('catalog')}>
               <Package size={15} /> Catálogo
             </NavBtn>
@@ -56,19 +56,28 @@ export function Header() {
 
           {/* Right actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 3 : 6, flexShrink: 0, minWidth: 0, whiteSpace: 'nowrap', marginLeft: 'auto' }}>
+            {isMobile && !currentUser && (
+              <button
+                onClick={() => nav('catalog')}
+                style={{ background: view === 'catalog' ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', cursor: 'pointer', padding: '6px 9px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}
+              >
+                <Package size={14} /> Catálogo
+              </button>
+            )}
             {isMobile && currentUser?.isAdmin && (
               <div style={{ position: 'relative' }}>
                 <button
-                  onClick={() => setCartOpen(!cartOpen)}
+                  onClick={() => setNotifOpen(!notifOpen)}
                   style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
                 >
                   <Bell size={17} />
                   {unreadNotifs > 0 && (
                     <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
-                      {cartCount}
+                      {unreadNotifs}
                     </span>
                   )}
                 </button>
+                {notifOpen && <NotificationsPanel onClose={() => setNotifOpen(false)} />}
               </div>
             )}
 
@@ -175,8 +184,9 @@ export function Header() {
             {/* Mobile menu */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
-              className="md:hidden" aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: isMobile ? 'flex' : 'none', alignItems: 'center' }}
+              aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -184,8 +194,8 @@ export function Header() {
         </div>
 
         {/* Mobile nav */}
-        {mobileOpen && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} className="md:hidden" aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}>
+        {isMobile && mobileOpen && (
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2 }} aria-label="Menú móvil">
             <MobileNavBtn onClick={() => { setCartOpen(true); setMobileOpen(false); }}>🛒 Ver carrito {cartCount > 0 ? `(${cartCount})` : ''}</MobileNavBtn>
             <a href="https://wa.me/593989961041?text=Hola%20SURTIMAX%2C%20necesito%20informaci%C3%B3n" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', padding: '10px 8px', borderRadius: 6, fontSize: 14, display: 'block' }} onClick={() => setMobileOpen(false)}>💬 WhatsApp</a>
             <MobileNavBtn onClick={() => nav('catalog', true)}>📦 Catálogo</MobileNavBtn>
@@ -242,7 +252,7 @@ function MobileNavBtn({ children, onClick }: { children: React.ReactNode; onClic
 }
 
 function NotificationsPanel({ onClose }: { onClose: () => void }) {
-  const { notifications, markNotificationRead, clearNotifications } = useStore();
+  const { notifications, clearNotifications, openNotification } = useStore();
 
   const iconMap: Record<AppNotification['type'], string> = {
     'new-quote': '📋', 'delivered': '✅', 'pending': '⏳', 'low-stock': '⚠️', 'whatsapp': '💬',
@@ -251,25 +261,25 @@ function NotificationsPanel({ onClose }: { onClose: () => void }) {
   return (
     <>
       <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={onClose} />
-      <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'white', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', width: 'min(340px, calc(100vw - 24px))', zIndex: 150, overflow: 'hidden', border: '1px solid #E3F2FD' }}>
+      <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'white', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', width: 'min(520px, calc(100vw - 24px))', zIndex: 150, overflow: 'hidden', border: '1px solid #E3F2FD' }}>
         <div style={{ padding: '14px 16px', borderBottom: '1px solid #E3F2FD', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFE' }}>
           <span style={{ fontWeight: 700, color: '#0D47A1', fontSize: 14 }}>🔔 Notificaciones</span>
           <button onClick={clearNotifications} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>
             Marcar todas leídas
           </button>
         </div>
-        <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+        <div style={{ maxHeight: 'min(70vh, 520px)', overflowY: 'auto' }}>
           {notifications.length === 0 ? (
             <div style={{ padding: 32, textAlign: 'center', color: '#90A4AE', fontSize: 13 }}>Sin notificaciones</div>
           ) : notifications.map(n => (
             <div
               key={n.id}
-              onClick={() => markNotificationRead(n.id)}
-              style={{ padding: '12px 16px', borderBottom: '1px solid #F5F5F5', backgroundColor: n.read ? 'white' : '#EEF6FF', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start' }}
+              onClick={() => { openNotification(n); onClose(); }}
+              style={{ padding: '12px 16px', borderBottom: '1px solid #F5F5F5', backgroundColor: n.read ? 'white' : '#EEF6FF', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start', minWidth: 0 }}
             >
               <span style={{ fontSize: 18, flexShrink: 0 }}>{iconMap[n.type]}</span>
-              <div>
-                <div style={{ fontSize: 13, color: '#263238', marginBottom: 2 }}>{n.message}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: '#263238', marginBottom: 2, lineHeight: 1.45, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{n.message}</div>
                 <div style={{ fontSize: 11, color: '#90A4AE' }}>{n.date}</div>
               </div>
               {!n.read && <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#1976D2', flexShrink: 0, marginTop: 4 }} />}
