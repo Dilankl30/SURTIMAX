@@ -50,7 +50,7 @@ export function AdminProducts() {
 
   const handleSave = async () => {
     if (!form.code.trim() || !form.name.trim()) return;
-    const imageUrl = form.imageUrl ? await cropImageForCatalog(form.imageUrl, imageAdjust) : '';
+    const imageUrl = form.imageUrl ? await fitImageForCatalog(form.imageUrl, imageAdjust) : '';
     const productToSave = { ...form, imageUrl };
     if (editId) { updateProduct(editId, productToSave); setEditId(null); }
     else addProduct(productToSave);
@@ -113,8 +113,8 @@ export function AdminProducts() {
             <FField label="Unidades por Paca" value={String(form.unitsPerPack)} onChange={v => set('unitsPerPack', parseInt(v) || 0)} placeholder="100" type="number" />
             <FField label="Stock Inicial" value={String(form.stock)} onChange={v => set('stock', parseInt(v) || 0)} placeholder="50" type="number" />
             <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '96px minmax(0, 1fr)', gap: 14, alignItems: 'center', border: '1px dashed #BBDEFB', borderRadius: 12, padding: 12, backgroundColor: '#F8FAFE' }}>
-              <div style={{ width: 96, height: 82, borderRadius: 10, background: '#E3F2FD', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1976D2' }}>
-                {form.imageUrl ? <img src={form.imageUrl} alt="Vista previa producto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={28} />}
+              <div style={{ width: 96, height: 82, borderRadius: 10, background: form.imageUrl ? '#FFFFFF' : '#E3F2FD', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1976D2', border: '1px solid #E3F2FD' }}>
+                {form.imageUrl ? <img src={form.imageUrl} alt="Vista previa producto" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <ImageIcon size={28} />}
               </div>
               <div>
                 <label style={lbl}>Foto / imagen del producto</label>
@@ -241,7 +241,7 @@ function ImageAdjustmentControls({ adjust, onChange }: { adjust: ImageAdjust; on
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12, marginBottom: 14, padding: 12, borderRadius: 12, backgroundColor: '#EEF6FF', border: '1px solid #BBDEFB' }}>
-      <RangeControl label={`Tamaño ${Math.round(adjust.zoom * 100)}%`} min={0.8} max={2} step={0.05} value={adjust.zoom} onChange={value => update('zoom', value)} />
+      <RangeControl label={`Tamaño ${Math.round(adjust.zoom * 100)}%`} min={0.5} max={1.6} step={0.05} value={adjust.zoom} onChange={value => update('zoom', value)} />
       <RangeControl label="Mover horizontal" min={-100} max={100} step={1} value={adjust.offsetX} onChange={value => update('offsetX', value)} />
       <RangeControl label="Mover vertical" min={-100} max={100} step={1} value={adjust.offsetY} onChange={value => update('offsetY', value)} />
       <button type="button" onClick={() => onChange(DEFAULT_IMAGE_ADJUST)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'end', padding: '9px 12px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
@@ -269,9 +269,9 @@ function CatalogPreviewCard({ product, imageAdjust }: { product: Omit<Product, '
 
   return (
     <div style={{ backgroundColor: 'white', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', border: '1px solid #F0F4F8' }}>
-      <div style={{ height: 130, background: `linear-gradient(135deg, ${color}18 0%, ${color}35 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ height: 130, background: product.imageUrl ? '#FFFFFF' : `linear-gradient(135deg, ${color}18 0%, ${color}35 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `translate(${imageAdjust.offsetX / 4}%, ${imageAdjust.offsetY / 4}%) scale(${imageAdjust.zoom})`, transformOrigin: 'center', transition: 'transform 0.15s' }} />
+          <img src={product.imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'contain', transform: `translate(${imageAdjust.offsetX / 4}%, ${imageAdjust.offsetY / 4}%) scale(${imageAdjust.zoom})`, transformOrigin: 'center', transition: 'transform 0.15s' }} />
         ) : (
           <span style={{ fontSize: 54 }}>{emoji}</span>
         )}
@@ -311,7 +311,7 @@ function CatalogPreviewCard({ product, imageAdjust }: { product: Omit<Product, '
 }
 
 
-function cropImageForCatalog(src: string, adjust: ImageAdjust): Promise<string> {
+function fitImageForCatalog(src: string, adjust: ImageAdjust): Promise<string> {
   if (!src.startsWith('data:image/')) return Promise.resolve(src);
 
   return new Promise(resolve => {
@@ -323,13 +323,17 @@ function cropImageForCatalog(src: string, adjust: ImageAdjust): Promise<string> 
       const ctx = canvas.getContext('2d');
       if (!ctx) { resolve(src); return; }
 
-      const baseScale = Math.max(canvas.width / img.width, canvas.height / img.height) * adjust.zoom;
+      const baseScale = Math.min(canvas.width / img.width, canvas.height / img.height) * adjust.zoom;
       const drawWidth = img.width * baseScale;
       const drawHeight = img.height * baseScale;
-      const maxPanX = Math.max(0, (drawWidth - canvas.width) / 2);
-      const maxPanY = Math.max(0, (drawHeight - canvas.height) / 2);
-      const dx = (canvas.width - drawWidth) / 2 + (adjust.offsetX / 100) * maxPanX;
-      const dy = (canvas.height - drawHeight) / 2 + (adjust.offsetY / 100) * maxPanY;
+      const availablePanX = Math.max(0, (canvas.width - drawWidth) / 2);
+      const availablePanY = Math.max(0, (canvas.height - drawHeight) / 2);
+      const overflowPanX = Math.max(0, (drawWidth - canvas.width) / 2);
+      const overflowPanY = Math.max(0, (drawHeight - canvas.height) / 2);
+      const panX = Math.max(availablePanX, overflowPanX);
+      const panY = Math.max(availablePanY, overflowPanY);
+      const dx = (canvas.width - drawWidth) / 2 + (adjust.offsetX / 100) * panX;
+      const dy = (canvas.height - drawHeight) / 2 + (adjust.offsetY / 100) * panY;
 
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
