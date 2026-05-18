@@ -5,6 +5,16 @@ import type { Product } from '../../store';
 
 const CATEGORIES = ['Caramelos', 'Chocolates', 'Gelatinas', 'Chicles', 'Confites', 'Gomas', 'Otros'];
 
+const CAT_COLOR: Record<string, string> = {
+  Caramelos: '#F4511E', Chocolates: '#6D4C41', Gelatinas: '#D81B60',
+  Chicles: '#00ACC1', Confites: '#8E24AA', Gomas: '#43A047', Otros: '#546E7A',
+};
+
+const CAT_EMOJI: Record<string, string> = {
+  Caramelos: '🍬', Chocolates: '🍫', Gelatinas: '🍮',
+  Chicles: '🫧', Confites: '🍭', Gomas: '🐻', Otros: '📦',
+};
+
 const EMPTY: Omit<Product, 'id'> = {
   code: '', name: '', category: 'Caramelos', price: 0, presentation: '', unitsPerPack: 0, stock: 0, available: true, imageUrl: '',
 };
@@ -106,6 +116,20 @@ export function AdminProducts() {
                 Disponible en catálogo
               </label>
             </div>
+            <div style={{ gridColumn: '1 / -1', border: '1px solid #E3F2FD', borderRadius: 14, padding: 16, background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFE 100%)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                <div>
+                  <label style={lbl}>Vista previa en catálogo</label>
+                  <p style={{ margin: 0, color: '#78909C', fontSize: 12 }}>Así se verá la foto y la información antes de guardar los cambios.</p>
+                </div>
+                {!form.available && (
+                  <span style={{ backgroundColor: '#FFEBEE', color: '#C62828', borderRadius: 20, padding: '4px 10px', fontSize: 12, fontWeight: 700 }}>No visible en catálogo</span>
+                )}
+              </div>
+              <div style={{ maxWidth: 280 }}>
+                <CatalogPreviewCard product={form} />
+              </div>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
             <button onClick={handleSave} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 22px', borderRadius: 9, border: 'none', background: '#388E3C', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
@@ -183,6 +207,56 @@ export function AdminProducts() {
         </div>
         <div style={{ padding: '12px 14px', borderTop: '1px solid #F0F4F8', backgroundColor: '#FAFBFC', fontSize: 12, color: '#78909C' }}>
           Mostrando {filtered.length} de {products.length} productos
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CatalogPreviewCard({ product }: { product: Omit<Product, 'id'> }) {
+  const color = CAT_COLOR[product.category] || '#546E7A';
+  const emoji = CAT_EMOJI[product.category] || '📦';
+  const name = product.name.trim() || 'Nombre del producto';
+  const code = product.code.trim() || 'COD-000';
+  const presentation = product.presentation.trim() || 'Presentación';
+
+  return (
+    <div style={{ backgroundColor: 'white', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', border: '1px solid #F0F4F8' }}>
+      <div style={{ height: 130, background: `linear-gradient(135deg, ${color}18 0%, ${color}35 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <span style={{ fontSize: 54 }}>{emoji}</span>
+        )}
+        <div style={{ position: 'absolute', top: 10, left: 10, backgroundColor: color, color: 'white', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>
+          {product.category}
+        </div>
+        {product.stock <= 10 && (
+          <div style={{ position: 'absolute', top: 10, right: 10, backgroundColor: '#FF5722', color: 'white', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
+            ¡Últimas!
+          </div>
+        )}
+      </div>
+      <div style={{ padding: '12px 14px 14px' }}>
+        <div style={{ fontSize: 10, color: '#90A4AE', fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>
+          Cod: {code}
+        </div>
+        <h3 style={{ margin: '0 0 6px', fontSize: 13, fontWeight: 700, color: '#1A237E', lineHeight: 1.35 }}>
+          {name}
+        </h3>
+        <div style={{ fontSize: 11, color: '#78909C', marginBottom: 12 }}>
+          {presentation} · {product.unitsPerPack || 0} u/paca
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#0D47A1', lineHeight: 1 }}>
+              ${(product.price || 0).toFixed(2)}
+            </div>
+            <div style={{ fontSize: 10, color: '#90A4AE' }}>incl. IVA</div>
+          </div>
+          <button disabled style={{ backgroundColor: '#0D47A1', color: 'white', border: 'none', padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, opacity: 0.9 }}>
+            Vista previa
+          </button>
         </div>
       </div>
     </div>
