@@ -83,6 +83,7 @@ interface SupabaseNotificationRow {
   message: string;
   date: string;
   read: boolean;
+  quotation_id?: string | null;
 }
 
 const productToRow = (product: Product): SupabaseProductRow => ({
@@ -190,6 +191,7 @@ const notificationToRow = (notification: AppNotification): SupabaseNotificationR
   message: notification.message,
   date: notification.date,
   read: notification.read,
+  quotation_id: notification.quotationId ?? null,
 });
 
 const notificationFromRow = (row: SupabaseNotificationRow): AppNotification => ({
@@ -198,6 +200,7 @@ const notificationFromRow = (row: SupabaseNotificationRow): AppNotification => (
   message: row.message,
   date: row.date,
   read: row.read,
+  quotationId: row.quotation_id ?? undefined,
 });
 
 export async function fetchProductsFromSupabase() {
@@ -250,6 +253,20 @@ export async function fetchQuotationsFromSupabase() {
   ));
 }
 
+export async function fetchQuotationFromSupabase(id: string) {
+  const [{ data: quotes, error: quoteError }, { data: items, error: itemsError }] = await Promise.all([
+    supabase.from('quotations').select('*').eq('id', id).maybeSingle(),
+    supabase.from('quotation_items').select('*').eq('quotation_id', id),
+  ]);
+  throwIfSupabaseError(quoteError);
+  throwIfSupabaseError(itemsError);
+  if (!quotes) return null;
+  return quotationFromRow(
+    quotes as SupabaseQuotationRow,
+    ((items ?? []) as SupabaseQuotationItemRow[]).map(quotationItemFromRow),
+  );
+}
+
 export async function saveQuotationToSupabase(quotation: Quotation) {
   const { error: quoteError } = await supabase
     .from('quotations')
@@ -293,7 +310,7 @@ export async function deleteQuotationFromSupabase(id: string) {
 }
 
 export async function fetchNotificationsFromSupabase() {
-  const { data, error } = await supabase.from('notifications').select('*').order('date', { ascending: false });
+  const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false });
   throwIfSupabaseError(error);
   return ((data ?? []) as SupabaseNotificationRow[]).map(notificationFromRow);
 }
@@ -325,4 +342,22 @@ export async function markAllNotificationsReadInSupabase() {
     .select();
   throwIfSupabaseError(error);
   return ((data ?? []) as SupabaseNotificationRow[]).map(notificationFromRow);
+}
+
+export function subscribeToNotificationsFromSupabase(onNotification: (notification: AppNotification) => void) {
+  const channel = supabase
+    .channel('surtimax-admin-notifications')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'notifications' },
+      (payload: { new: unknown }) => {
+        const row = payload.new as SupabaseNotificationRow | null;
+        if (row) onNotification(notificationFromRow(row));
+      },
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }

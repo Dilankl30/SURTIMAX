@@ -26,7 +26,8 @@ También puedes copiar `.env.example` y reemplazar los valores si cambias de pro
 1. Abre **SQL Editor** en Supabase.
 2. Ejecuta completo el archivo `supabase/schema.sql`.
 3. El script recrea las tablas con los nombres y tipos que usa la app: `profiles`, `products`, `quotations`, `quotation_items` y `notifications`.
-4. La base queda limpia: conserva el administrador inicial y el catálogo; cotizaciones, items y notificaciones empiezan en cero.
+4. La tabla `notifications` queda vinculada a `quotations` por `quotation_id` y se agrega a la publicación `supabase_realtime` para que el administrador reciba avisos sin recargar la página.
+5. La base queda limpia: conserva el administrador inicial y el catálogo; cotizaciones, items y notificaciones empiezan en cero.
 
 ## 3. Autenticación por correo y recuperación
 
@@ -41,6 +42,6 @@ La app permite cargar una foto al crear/editar productos. En esta etapa se guard
 
 ## 5. Persistencia desde la app
 
-El script SQL incluye políticas RLS de lectura/escritura para que la app pueda guardar productos, perfiles, cotizaciones, items y notificaciones usando la publishable key. Para producción, restringe estas políticas a usuarios autenticados/admin antes de publicar.
+El script SQL incluye políticas RLS de lectura/escritura y configuración Realtime para que la app pueda guardar productos, perfiles, cotizaciones, items y notificaciones usando la publishable key. Para producción, restringe estas políticas a usuarios autenticados/admin antes de publicar.
 
 La sesión del usuario se maneja con Supabase Auth y la app conserva el usuario actual en `localStorage` hasta pulsar **Cerrar sesión**.

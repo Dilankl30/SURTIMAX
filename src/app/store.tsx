@@ -5,6 +5,7 @@ import {
   fetchNotificationsFromSupabase,
   fetchProductsFromSupabase,
   fetchProfilesFromSupabase,
+  fetchQuotationFromSupabase,
   fetchQuotationsFromSupabase,
   isSupabaseConfigured,
   markAllNotificationsReadInSupabase,
@@ -17,6 +18,7 @@ import {
   saveProductToSupabase,
   saveProfileToSupabase,
   saveQuotationToSupabase,
+  subscribeToNotificationsFromSupabase,
   updateQuotationInSupabase,
   verifyEmailLoginCode,
 } from './lib/supabase';
@@ -92,6 +94,7 @@ export interface AppNotification {
   message: string;
   date: string;
   read: boolean;
+  quotationId?: string;
 }
 
 // ─── Initial Data ────────────────────────────────────────────────────────────
@@ -139,6 +142,25 @@ const INITIAL_QUOTATIONS: Quotation[] = [];
 
 const INITIAL_NOTIFICATIONS: AppNotification[] = [];
 
+
+const sortNotifications = (items: AppNotification[]) => [...items].sort((a, b) => {
+  const dateCompare = b.date.localeCompare(a.date);
+  return dateCompare || b.id.localeCompare(a.id);
+});
+
+const upsertNotification = (items: AppNotification[], notification: AppNotification) => {
+  const exists = items.some(item => item.id === notification.id);
+  const next = exists
+    ? items.map(item => item.id === notification.id ? { ...item, ...notification } : item)
+    : [notification, ...items];
+  return sortNotifications(next);
+};
+
+const getQuotationNumberFromNotification = (notification: AppNotification) => {
+  const match = notification.message.match(/#([^\s)]+)/);
+  return match?.[1];
+};
+
 // ─── Context ─────────────────────────────────────────────────────────────────
 
 interface AppContextType {
@@ -175,6 +197,7 @@ interface AppContextType {
   notifications: AppNotification[];
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
+  openNotification: (notification: AppNotification) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -221,9 +244,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .then(remoteQuotes => { if (remoteQuotes.length) setQuotations(remoteQuotes); })
       .catch(error => console.warn('No se pudieron cargar cotizaciones desde Supabase', error));
     fetchNotificationsFromSupabase()
-      .then(remoteNotifications => { if (remoteNotifications.length) setNotifications(remoteNotifications); })
+      .then(remoteNotifications => { if (remoteNotifications.length) setNotifications(sortNotifications(remoteNotifications)); })
       .catch(error => console.warn('No se pudieron cargar notificaciones desde Supabase', error));
   }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !currentUser?.isAdmin) return undefined;
+
+    return subscribeToNotificationsFromSupabase(notification => {
+      setNotifications(prev => upsertNotification(prev, notification));
+    });
+  }, [currentUser?.isAdmin]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -345,9 +376,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       message: `Nueva cotización de ${quoteClient.clientName} (#${newQuote.number})`,
       date: newQuote.date,
       read: false,
+      quotationId: newQuote.id,
     };
-    setNotifications(prev => [notification, ...prev]);
-    if (isSupabaseConfigured) saveNotificationToSupabase(notification).catch(error => console.warn('No se pudo guardar la notificación en Supabase', error));
+    setNotifications(prev => upsertNotification(prev, notification));
+    if (isSupabaseConfigured) {
+      saveQuotationToSupabase(newQuote)
+        .then(() => saveNotificationToSupabase(notification))
+        .catch(error => console.warn('No se pudo guardar la cotización o notificación en Supabase', error));
+    }
 
     clearCart();
     setView('quote-detail');
@@ -373,6 +409,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (isSupabaseConfigured) markAllNotificationsReadInSupabase().catch(error => console.warn('No se pudieron limpiar las notificaciones en Supabase', error));
   }, []);
 
+  const openNotification = useCallback(async (notification: AppNotification) => {
+    markNotificationRead(notification.id);
+
+    const quotationNumber = getQuotationNumberFromNotification(notification);
+    const localQuotation = quotations.find(q =>
+      q.id === notification.quotationId || (quotationNumber && q.number === quotationNumber),
+    );
+
+    if (localQuotation) {
+      setSelectedQuotationId(localQuotation.id);
+      setView('quote-detail');
+      return;
+    }
+
+    if (!notification.quotationId || !isSupabaseConfigured) return;
+
+    try {
+      const remoteQuotation = await fetchQuotationFromSupabase(notification.quotationId);
+      if (!remoteQuotation) return;
+      setQuotations(prev => prev.some(q => q.id === remoteQuotation.id) ? prev : [remoteQuotation, ...prev]);
+      setSelectedQuotationId(remoteQuotation.id);
+      setView('quote-detail');
+    } catch (error) {
+      console.warn('No se pudo abrir la cotización desde la notificación', error);
+    }
+  }, [markNotificationRead, quotations]);
+
   return (
     <AppContext.Provider value={{
       view, setView, selectedQuotationId, setSelectedQuotationId,
@@ -381,7 +444,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart,
       cartOpen, setCartOpen, authOpen, setAuthOpen,
       quotations, createQuotation, updateQuotation, deleteQuotation,
-      notifications, markNotificationRead, clearNotifications,
+      notifications, markNotificationRead, clearNotifications, openNotification,
     }}>
       {children}
     </AppContext.Provider>

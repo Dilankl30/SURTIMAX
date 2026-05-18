@@ -69,7 +69,9 @@ create table public.notifications (
   type text not null,
   message text not null,
   date date not null default current_date,
-  read boolean not null default false
+  read boolean not null default false,
+  quotation_id text references public.quotations(id) on delete cascade,
+  created_at timestamptz not null default now()
 );
 
 
@@ -132,6 +134,22 @@ create policy "Items lectura" on public.quotation_items for select using (true);
 create policy "Items escritura" on public.quotation_items for all using (true) with check (true);
 create policy "Notificaciones lectura" on public.notifications for select using (true);
 create policy "Notificaciones escritura" on public.notifications for all using (true) with check (true);
+
+alter table public.notifications replica identity full;
+
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+    and not exists (
+      select 1
+      from pg_publication_tables
+      where pubname = 'supabase_realtime'
+        and schemaname = 'public'
+        and tablename = 'notifications'
+    ) then
+    alter publication supabase_realtime add table public.notifications;
+  end if;
+end $$;
 
 grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;

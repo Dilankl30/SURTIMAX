@@ -67,16 +67,17 @@ export function Header() {
             {isMobile && currentUser?.isAdmin && (
               <div style={{ position: 'relative' }}>
                 <button
-                  onClick={() => setCartOpen(!cartOpen)}
+                  onClick={() => setNotifOpen(!notifOpen)}
                   style={{ position: 'relative', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', padding: isMobile ? '6px' : '8px', borderRadius: 8, display: 'flex', alignItems: 'center' }}
                 >
                   <Bell size={17} />
                   {unreadNotifs > 0 && (
                     <span style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#FF5722', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>
-                      {cartCount}
+                      {unreadNotifs}
                     </span>
                   )}
                 </button>
+                {notifOpen && <NotificationsPanel onClose={() => setNotifOpen(false)} />}
               </div>
             )}
 
@@ -251,7 +252,7 @@ function MobileNavBtn({ children, onClick }: { children: React.ReactNode; onClic
 }
 
 function NotificationsPanel({ onClose }: { onClose: () => void }) {
-  const { notifications, markNotificationRead, clearNotifications } = useStore();
+  const { notifications, clearNotifications, openNotification } = useStore();
 
   const iconMap: Record<AppNotification['type'], string> = {
     'new-quote': '📋', 'delivered': '✅', 'pending': '⏳', 'low-stock': '⚠️', 'whatsapp': '💬',
@@ -273,7 +274,7 @@ function NotificationsPanel({ onClose }: { onClose: () => void }) {
           ) : notifications.map(n => (
             <div
               key={n.id}
-              onClick={() => markNotificationRead(n.id)}
+              onClick={() => { openNotification(n); onClose(); }}
               style={{ padding: '12px 16px', borderBottom: '1px solid #F5F5F5', backgroundColor: n.read ? 'white' : '#EEF6FF', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start', minWidth: 0 }}
             >
               <span style={{ fontSize: 18, flexShrink: 0 }}>{iconMap[n.type]}</span>
