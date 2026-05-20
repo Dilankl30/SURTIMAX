@@ -330,7 +330,12 @@ export function QuotationDetail() {
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; }
-          #quotation-document { box-shadow: none !important; border: none !important; border-radius: 0 !important; }
+          #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
+          #quotation-document { box-shadow: none !important; border: 1px solid #000 !important; border-radius: 0 !important; background: #fff !important; }
+          #quotation-document [style*="background"],
+          #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
+          #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
+          #quotation-document img { filter: grayscale(1) contrast(1.1); }
           @page { margin: 10mm; }
         }
       `}</style>
