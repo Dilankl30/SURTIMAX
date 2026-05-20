@@ -22,6 +22,7 @@ import {
   subscribeToNotificationsFromSupabase,
   updateQuotationInSupabase,
   verifyEmailLoginCode,
+  verifyEmailRegistrationCode,
 } from './lib/supabase';
 
 export type ViewType =
@@ -267,42 +268,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     else window.localStorage.removeItem(SESSION_KEY);
   }, [currentUser]);
 
-  useEffect(() => {
-    if (!isSupabaseConfigured) return;
-    fetchProductsFromSupabase()
-      .then(rows => setProducts(rows.map(productFromRow)))
-      .catch(error => console.warn('No se pudieron cargar productos desde Supabase', error));
-    fetchProfilesFromSupabase()
-      .then(rows => setUsers(prev => {
-        const remoteUsers = rows.map(profileFromRow).map(remote => ({
-          ...remote,
-          password: prev.find(user => user.email.toLowerCase() === remote.email.toLowerCase())?.password ?? remote.password,
-        }));
-        return remoteUsers.length ? remoteUsers : prev;
-      }))
-      .catch(error => console.warn('No se pudieron cargar perfiles desde Supabase', error));
-    fetchQuotationsFromSupabase()
-      .then(remoteQuotes => { if (remoteQuotes.length) setQuotations(remoteQuotes); })
-      .catch(error => console.warn('No se pudieron cargar cotizaciones desde Supabase', error));
-    fetchNotificationsFromSupabase()
-      .then(remoteNotifications => { if (remoteNotifications.length) setNotifications(sortNotifications(remoteNotifications)); })
-      .catch(error => console.warn('No se pudieron cargar notificaciones desde Supabase', error));
-  }, []);
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !currentUser?.isAdmin) return undefined;
-
-    return subscribeToNotificationsFromSupabase(notification => {
-      setNotifications(prev => upsertNotification(prev, notification));
-    });
-  }, [currentUser?.isAdmin]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (currentUser) window.localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
-    else window.localStorage.removeItem(SESSION_KEY);
-  }, [currentUser]);
-
   const login = useCallback((email: string, password: string): boolean => {
     const user = users.find(u => u.email === email && u.password === password);
     if (user) { setCurrentUser(user); return true; }
@@ -338,7 +303,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const remembered = pendingRegisterEmail || (typeof window !== 'undefined' ? window.localStorage.getItem(REGISTER_PENDING_KEY) : null);
     if (!remembered || remembered !== targetEmail) throw new Error('Primero solicita el código de registro para este correo.');
 
-    await verifyEmailLoginCode(targetEmail, code);
+    if (!/^\d{6}$/.test(code.trim())) throw new Error('El código debe tener 6 dígitos.');
+
+    await verifyEmailRegistrationCode(targetEmail, code.trim());
 
     if (users.some(u => u.email.toLowerCase() === targetEmail)) throw new Error('Ya existe una cuenta con este correo.');
 

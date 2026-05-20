@@ -185,7 +185,21 @@ export function AuthModal() {
                 <input value={regPhone} onChange={e => setRegPhone(e.target.value)} placeholder="0991234567" style={inp} />
               </Field>
               <Field label="Correo electrónico *" icon={<Mail size={15} />}>
-                <input value={regEmail} onChange={e => setRegEmail(e.target.value)} type="email" placeholder="correo@ejemplo.com" style={inp} />
+                <input
+                  value={regEmail}
+                  onChange={e => {
+                    const nextEmail = e.target.value;
+                    if (registerCodeSent && nextEmail.toLowerCase() !== regEmail.toLowerCase()) {
+                      setRegisterCodeSent(false);
+                      setEmailCode('');
+                      setError('Cambiaste el correo. Debes solicitar un nuevo código para ese correo.');
+                    }
+                    setRegEmail(nextEmail);
+                  }}
+                  type="email"
+                  placeholder="correo@ejemplo.com"
+                  style={inp}
+                />
               </Field>
               <Field label="Contraseña *" icon={<Lock size={15} />}>
                 <input value={regPass} onChange={e => setRegPass(e.target.value)} type="password" placeholder="Mínimo 6 caracteres" style={inp} />

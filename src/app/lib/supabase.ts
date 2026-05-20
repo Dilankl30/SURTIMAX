@@ -30,6 +30,12 @@ export async function verifyEmailLoginCode(email: string, token: string) {
   return data as { user?: { email?: string } };
 }
 
+export async function verifyEmailRegistrationCode(email: string, token: string) {
+  const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
+  throwIfSupabaseError(error);
+  return data as { user?: { email?: string } };
+}
+
 export async function requestPasswordRecovery(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/`,
