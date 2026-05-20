@@ -260,7 +260,6 @@ export function QuotationDetail() {
         <div style={{ padding: '20px 32px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '1px solid #E3F2FD', flexWrap: 'wrap', gap: 24 }}>
           <div style={{ maxWidth: 420 }}>
             <h4 style={{ color: '#0D47A1', margin: '0 0 10px', fontWeight: 700, fontSize: 13 }}>VALIDEZ Y CONDICIONES COMERCIALES:</h4>
-            <p style={{ color: '#EF5350', margin: '0 0 6px', fontSize: 12 }}>• Los precios reflejados están sujetos a cambios sin previo aviso.</p>
             <p style={{ color: '#546E7A', margin: 0, fontSize: 12 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
           </div>
 
