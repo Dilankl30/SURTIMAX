@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Printer, ArrowLeft, MessageCircle, Edit2, Save, X } from 'lucide-react';
 import { useStore } from '../store';
 import type { QuotationClientData } from '../store';
-import { createQuotationPdfBlob, createQuotationPdfBlobFromElement } from '../utils/quotationPdf';
+import { createQuotationPdfBlobFromElement } from '../utils/quotationPdf';
 import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
 
 export function QuotationDetail() {
@@ -92,16 +92,18 @@ export function QuotationDetail() {
   };
 
   const handleSendClientWhatsApp = async () => {
-    const printableQuote = { ...quote, discount, totalCotizado, subtotal, iva, finalTotal };
     const documentElement = document.getElementById('quotation-document');
+    if (!documentElement) {
+      alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
+      return;
+    }
     let pdfBlob: Blob;
 
     try {
-      pdfBlob = documentElement
-        ? await createQuotationPdfBlobFromElement(documentElement)
-        : createQuotationPdfBlob(printableQuote);
+      pdfBlob = await createQuotationPdfBlobFromElement(documentElement);
     } catch {
-      pdfBlob = createQuotationPdfBlob(printableQuote);
+      alert('No se pudo generar el PDF visual de la prefactura en este dispositivo. Intenta desde otro navegador o desde escritorio.');
+      return;
     }
 
     const fileName = `${quote.number}.pdf`;
