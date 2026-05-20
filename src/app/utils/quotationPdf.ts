@@ -5,6 +5,46 @@ const PAGE_HEIGHT = 842;
 const PAGE_MARGIN = 24;
 const TEXT_MARGIN_X = 46;
 
+const PDF_MONOCHROME_STYLE = `
+  #quotation-document.pdf-export,
+  #quotation-document.pdf-export * {
+    color: #000 !important;
+    text-shadow: none !important;
+  }
+
+  #quotation-document.pdf-export {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+
+  #quotation-document.pdf-export table,
+  #quotation-document.pdf-export th,
+  #quotation-document.pdf-export td,
+  #quotation-document.pdf-export div,
+  #quotation-document.pdf-export span,
+  #quotation-document.pdf-export p,
+  #quotation-document.pdf-export h1,
+  #quotation-document.pdf-export h2,
+  #quotation-document.pdf-export h3,
+  #quotation-document.pdf-export h4 {
+    border-color: #000 !important;
+  }
+
+  #quotation-document.pdf-export tr,
+  #quotation-document.pdf-export thead tr,
+  #quotation-document.pdf-export tbody tr,
+  #quotation-document.pdf-export [style*="background"],
+  #quotation-document.pdf-export [style*="background-color"] {
+    background: #fff !important;
+    background-color: #fff !important;
+  }
+
+  #quotation-document.pdf-export img {
+    filter: grayscale(1) contrast(1.1);
+  }
+`;
+
 export async function createQuotationPdfBlobFromElement(element: HTMLElement): Promise<Blob> {
   const canvas = await renderElementToCanvas(element);
   const jpegData = canvas.toDataURL('image/jpeg', 0.92);
@@ -43,6 +83,7 @@ async function renderElementToCanvas(element: HTMLElement): Promise<HTMLCanvasEl
   const clonedElement = element.cloneNode(true) as HTMLElement;
 
   clonedElement.querySelectorAll('.no-print').forEach(node => node.remove());
+  clonedElement.classList.add('pdf-export');
   clonedElement.style.width = `${renderWidth}px`;
   clonedElement.style.maxWidth = `${renderWidth}px`;
   clonedElement.style.boxSizing = 'border-box';
@@ -55,6 +96,10 @@ async function renderElementToCanvas(element: HTMLElement): Promise<HTMLCanvasEl
   wrapper.style.minHeight = `${renderHeight}px`;
   wrapper.style.background = 'white';
   wrapper.style.fontFamily = 'Arial, Helvetica, sans-serif';
+
+  const style = document.createElement('style');
+  style.textContent = PDF_MONOCHROME_STYLE;
+  wrapper.appendChild(style);
   wrapper.appendChild(clonedElement);
 
   const serialized = new XMLSerializer().serializeToString(wrapper);
