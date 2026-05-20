@@ -3,7 +3,7 @@ import { X, User, Lock, Phone, MapPin, CreditCard, Mail } from 'lucide-react';
 import { useStore } from '../store';
 
 export function AuthModal() {
-  const { authOpen, setAuthOpen, login, register, requestLoginCode, verifyLoginCode, requestPasswordReset } = useStore();
+  const { authOpen, setAuthOpen, login, requestLoginCode, verifyLoginCode, requestPasswordReset, requestRegisterCode, completeRegisterWithCode } = useStore();
   const [mode, setMode] = useState<'login' | 'register' | 'code' | 'forgot'>('login');
   const [error, setError] = useState('');
   const [loginEmail, setLoginEmail] = useState('');
@@ -16,10 +16,11 @@ export function AuthModal() {
   const [regPass, setRegPass] = useState('');
   const [emailCode, setEmailCode] = useState('');
   const [codeSent, setCodeSent] = useState(false);
+  const [registerCodeSent, setRegisterCodeSent] = useState(false);
 
   if (!authOpen) return null;
 
-  const switchMode = (m: 'login' | 'register' | 'code' | 'forgot') => { setMode(m); setError(''); setCodeSent(false); setEmailCode(''); };
+  const switchMode = (m: 'login' | 'register' | 'code' | 'forgot') => { setMode(m); setError(''); setCodeSent(false); setRegisterCodeSent(false); setEmailCode(''); };
 
   const handleLogin = () => {
     if (!loginEmail || !loginPass) { setError('Completa todos los campos'); return; }
@@ -60,15 +61,32 @@ export function AuthModal() {
     }
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!regName || !regCedula || !regAddress || !regPhone || !regEmail || !regPass) {
       setError('Completa todos los campos obligatorios');
       return;
     }
     if (regPass.length < 6) { setError('La contraseña debe tener mínimo 6 caracteres'); return; }
-    register({ name: regName, cedula: regCedula, address: regAddress, phone: regPhone, email: regEmail, password: regPass });
-    setAuthOpen(false);
-    setError('');
+    if (!registerCodeSent) {
+      try {
+        await requestRegisterCode(regEmail);
+        setRegisterCodeSent(true);
+        setError('Te enviamos un código a tu correo. Ingresa el código para completar el registro.');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'No se pudo enviar el código de registro');
+      }
+      return;
+    }
+
+    if (!emailCode) { setError('Ingresa el código enviado al correo para registrarte'); return; }
+
+    try {
+      await completeRegisterWithCode({ name: regName, cedula: regCedula, address: regAddress, phone: regPhone, email: regEmail, password: regPass }, emailCode);
+      setAuthOpen(false);
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Código inválido o expirado');
+    }
   };
 
   return (
@@ -173,7 +191,13 @@ export function AuthModal() {
                 <input value={regPass} onChange={e => setRegPass(e.target.value)} type="password" placeholder="Mínimo 6 caracteres" style={inp} />
               </Field>
 
-              <button onClick={handleRegister} style={btn}>Crear Cuenta Gratis →</button>
+              {registerCodeSent && (
+                <Field label="Código de verificación *" icon={<Lock size={15} />}>
+                  <input value={emailCode} onChange={e => setEmailCode(e.target.value)} placeholder="123456" style={inp} />
+                </Field>
+              )}
+
+              <button onClick={handleRegister} style={btn}>{registerCodeSent ? 'Verificar código y crear cuenta →' : 'Enviar código de registro →'}</button>
               <button onClick={() => switchMode('login')} style={{ background: 'none', border: 'none', color: '#1976D2', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>
                 ¿Ya tienes cuenta? Inicia sesión
               </button>

@@ -14,6 +14,7 @@ import {
   profileFromRow,
   requestEmailLoginCode,
   requestPasswordRecovery,
+  requestEmailRegistrationCode,
   saveNotificationToSupabase,
   saveProductToSupabase,
   saveProfileToSupabase,
@@ -174,6 +175,8 @@ interface AppContextType {
   requestLoginCode: (email: string) => Promise<boolean>;
   verifyLoginCode: (email: string, code: string) => Promise<boolean>;
   requestPasswordReset: (email: string) => Promise<boolean>;
+  requestRegisterCode: (email: string) => Promise<boolean>;
+  completeRegisterWithCode: (data: Omit<User, 'id' | 'isAdmin'>, code: string) => Promise<boolean>;
   logout: () => void;
   register: (data: Omit<User, 'id' | 'isAdmin'>) => void;
   products: Product[];
@@ -203,6 +206,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 const SESSION_KEY = 'surtimax.currentUser';
+const REGISTER_PENDING_KEY = 'surtimax.pendingRegisterEmail';
 
 function getStoredUser() {
   if (typeof window === 'undefined') return null;
@@ -225,6 +229,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
+  const [pendingRegisterEmail, setPendingRegisterEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchProductsFromSupabase()
+      .then(rows => setProducts(rows.map(productFromRow)))
+      .catch(error => console.warn('No se pudieron cargar productos desde Supabase', error));
+    fetchProfilesFromSupabase()
+      .then(rows => setUsers(prev => {
+        const remoteUsers = rows.map(profileFromRow).map(remote => ({
+          ...remote,
+          password: prev.find(user => user.email.toLowerCase() === remote.email.toLowerCase())?.password ?? remote.password,
+        }));
+        return remoteUsers.length ? remoteUsers : prev;
+      }))
+      .catch(error => console.warn('No se pudieron cargar perfiles desde Supabase', error));
+    fetchQuotationsFromSupabase()
+      .then(remoteQuotes => { if (remoteQuotes.length) setQuotations(remoteQuotes); })
+      .catch(error => console.warn('No se pudieron cargar cotizaciones desde Supabase', error));
+    fetchNotificationsFromSupabase()
+      .then(remoteNotifications => { if (remoteNotifications.length) setNotifications(sortNotifications(remoteNotifications)); })
+      .catch(error => console.warn('No se pudieron cargar notificaciones desde Supabase', error));
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !currentUser?.isAdmin) return undefined;
+
+    return subscribeToNotificationsFromSupabase(notification => {
+      setNotifications(prev => upsertNotification(prev, notification));
+    });
+  }, [currentUser?.isAdmin]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (currentUser) window.localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+    else window.localStorage.removeItem(SESSION_KEY);
+  }, [currentUser]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -284,6 +325,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await requestPasswordRecovery(email);
     return true;
   }, []);
+
+  const requestRegisterCode = useCallback(async (email: string): Promise<boolean> => {
+    await requestEmailRegistrationCode(email);
+    setPendingRegisterEmail(email.toLowerCase());
+    if (typeof window !== 'undefined') window.localStorage.setItem(REGISTER_PENDING_KEY, email.toLowerCase());
+    return true;
+  }, []);
+
+  const completeRegisterWithCode = useCallback(async (data: Omit<User, 'id' | 'isAdmin'>, code: string): Promise<boolean> => {
+    const targetEmail = data.email.toLowerCase();
+    const remembered = pendingRegisterEmail || (typeof window !== 'undefined' ? window.localStorage.getItem(REGISTER_PENDING_KEY) : null);
+    if (!remembered || remembered !== targetEmail) throw new Error('Primero solicita el código de registro para este correo.');
+
+    await verifyEmailLoginCode(targetEmail, code);
+
+    if (users.some(u => u.email.toLowerCase() === targetEmail)) throw new Error('Ya existe una cuenta con este correo.');
+
+    const newUser: User = { ...data, id: crypto.randomUUID?.() ?? `u${Date.now()}`, isAdmin: false };
+    setUsers(prev => [...prev, newUser]);
+    setCurrentUser(newUser);
+    setPendingRegisterEmail(null);
+    if (typeof window !== 'undefined') window.localStorage.removeItem(REGISTER_PENDING_KEY);
+    if (isSupabaseConfigured) saveProfileToSupabase(newUser).catch(error => console.warn('No se pudo guardar el perfil en Supabase', error));
+    return true;
+  }, [pendingRegisterEmail, users]);
 
   const logout = useCallback(() => { setCurrentUser(null); setView('catalog'); }, []);
 
@@ -439,7 +505,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider value={{
       view, setView, selectedQuotationId, setSelectedQuotationId,
-      currentUser, users, login, requestLoginCode, verifyLoginCode, requestPasswordReset, logout, register,
+      currentUser, users, login, requestLoginCode, verifyLoginCode, requestPasswordReset, requestRegisterCode, completeRegisterWithCode, logout, register,
       products, setProducts, addProduct, updateProduct, deleteProduct,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart,
       cartOpen, setCartOpen, authOpen, setAuthOpen,
