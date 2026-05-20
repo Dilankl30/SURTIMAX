@@ -401,6 +401,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     setQuotations(prev => [...prev, newQuote]);
+    if (isSupabaseConfigured) saveQuotationToSupabase(newQuote).catch(error => console.warn('No se pudo guardar la cotización en Supabase', error));
     setSelectedQuotationId(newQuote.id);
     const notification: AppNotification = {
       id: `n${Date.now()}`,
