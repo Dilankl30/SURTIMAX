@@ -169,7 +169,7 @@ export function QuotationDetail() {
         {/* Header */}
         <div style={{ padding: '24px 32px', borderBottom: '3px solid #0D47A1', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 58, objectFit: 'contain', marginBottom: 10 }} />
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 84, objectFit: 'contain', marginBottom: 10 }} />
             <div style={{ fontSize: 12, color: '#546E7A', lineHeight: 1.8 }}>
               <div><strong style={{ color: '#0D47A1' }}>DIRECCIÓN:</strong> QUITO</div>
               <div><strong style={{ color: '#0D47A1' }}>RUC:</strong> 2200123456001</div>
@@ -194,7 +194,7 @@ export function QuotationDetail() {
         {/* Client info */}
         <div style={{ padding: '18px 32px', backgroundColor: '#F8FAFE', borderBottom: '1px solid #E3F2FD' }}>
           <h3 style={{ margin: '0 0 12px', color: '#0D47A1', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 6, display: 'inline-block' }}>
-            Información de la Cotización Para:
+            Información del cliente:
           </h3>
           {currentUser?.isAdmin && (
             <div className="no-print" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -249,15 +249,6 @@ export function QuotationDetail() {
                     <td style={{ ...tdC, textAlign: 'left', paddingLeft: 16, fontWeight: 500, color: '#1A237E' }}>{item.description}</td>
                     <td style={tdC}>${item.unitPrice.toFixed(2)}</td>
                     <td style={{ ...tdC, fontWeight: 700, color: '#0D47A1' }}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
-                  </tr>
-                ))}
-                {Array.from({ length: Math.max(0, 8 - quote.items.length) }).map((_, i) => (
-                  <tr key={`empty-${i}`} style={{ borderBottom: '1px solid #E3F2FD' }}>
-                    <td style={{ ...tdC, height: 34 }} />
-                    <td style={tdC} />
-                    <td style={{ ...tdC, textAlign: 'left', paddingLeft: 16 }} />
-                    <td style={tdC} />
-                    <td style={tdC} />
                   </tr>
                 ))}
               </tbody>
