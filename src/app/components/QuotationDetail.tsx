@@ -32,7 +32,7 @@ export function QuotationDetail() {
   if (!quote) {
     return (
       <div style={{ maxWidth: 900, margin: '0 auto', padding: 48, textAlign: 'center' }}>
-        <p style={{ color: '#78909C' }}>Cotización no encontrada</p>
+        <p style={{ color: '#78909C' }}>Prefactura no encontrada</p>
         <button onClick={() => setView('catalog')} style={{ marginTop: 16, padding: '10px 24px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer' }}>Volver al catálogo</button>
       </div>
     );
@@ -73,11 +73,11 @@ export function QuotationDetail() {
 
   const clientWANum = normalizeWhatsAppNumber(quote.clientPhone);
   const clientWAMsg = encodeURIComponent(
-    `Hola ${quote.clientName}, su cotización *${quote.number}* por un total de *$${finalTotal.toFixed(2)}* está lista.\n\nProductos:\n` +
+    `Hola ${quote.clientName}, su prefactura *${quote.number}* por un total de *$${finalTotal.toFixed(2)}* está lista.\n\nProductos:\n` +
     quote.items.map(i => `• ${i.description} x${i.quantity} = $${(i.quantity * i.unitPrice).toFixed(2)}`).join('\n') +
     `\n\n_SURTIMAX - variedad y buen precio_`
   );
-  const adminWAMsg = encodeURIComponent(`Hola SURTIMAX, quiero información sobre mi cotización ${quote.number}`);
+  const adminWAMsg = encodeURIComponent(`Hola SURTIMAX, quiero información sobre mi prefactura ${quote.number}`);
   const clientWAUrl = `https://wa.me/${clientWANum}?text=${clientWAMsg}`;
 
   const downloadPdf = (blob: Blob, fileName: string) => {
@@ -110,7 +110,7 @@ export function QuotationDetail() {
     if (navigator.canShare?.({ files: [pdfFile] })) {
       try {
         await navigator.share({
-          title: `Cotización ${quote.number}`,
+          title: `Prefactura ${quote.number}`,
           text: decodeURIComponent(clientWAMsg),
           files: [pdfFile],
         });
@@ -146,7 +146,7 @@ export function QuotationDetail() {
           </button>
         ) : (
           <a
-            href={`https://wa.me/593989961041?text=${adminWAMsg}`}
+            href={`https://wa.me/593958737004?text=${adminWAMsg}`}
             target="_blank" rel="noopener noreferrer"
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#25D366', color: 'white', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}
           >
@@ -169,18 +169,18 @@ export function QuotationDetail() {
         {/* Header */}
         <div style={{ padding: '24px 32px', borderBottom: '3px solid #0D47A1', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 84, objectFit: 'contain', marginBottom: 10 }} />
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 110, objectFit: 'contain', marginBottom: 10 }} />
             <div style={{ fontSize: 12, color: '#546E7A', lineHeight: 1.8 }}>
-              <div><strong style={{ color: '#0D47A1' }}>DIRECCIÓN:</strong> QUITO</div>
-              <div><strong style={{ color: '#0D47A1' }}>RUC:</strong> 2200123456001</div>
-              <div><strong style={{ color: '#0D47A1' }}>TELÉFONO:</strong> 0989961041</div>
+              <div><strong style={{ color: '#0D47A1' }}>CIUDAD:</strong> QUITO</div>
+              <div><strong style={{ color: '#0D47A1' }}>CI O RUC:</strong> 2100282249001</div>
+              <div><strong style={{ color: '#0D47A1' }}>TLF:</strong> 0958737004</div>
               <div><strong style={{ color: '#0D47A1' }}>EMAIL:</strong> ventas@surtimax.com</div>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <h1 style={{ color: '#0D47A1', fontSize: 30, fontWeight: 800, margin: '0 0 14px', letterSpacing: 2 }}>COTIZACIÓN</h1>
+            <h1 style={{ color: '#0D47A1', fontSize: 30, fontWeight: 800, margin: '0 0 14px', letterSpacing: 2 }}>PREFACTURA</h1>
             <div style={{ fontSize: 13, color: '#546E7A', lineHeight: 1.8 }}>
-              <div><strong>No. Cotización:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
+              <div><strong>No. Prefactura:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
               <div><strong>Fecha:</strong> {new Date(quote.date).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
             </div>
             <div style={{ marginTop: 10 }}>
@@ -296,7 +296,7 @@ export function QuotationDetail() {
               }
             />
             <div style={{ height: 1, backgroundColor: '#E3F2FD', margin: '8px 0' }} />
-            <TotalRow label="TOTAL COTIZADO:" value={`$${finalTotal.toFixed(2)}`} highlight />
+            <TotalRow label="TOTAL PREFACTURA:" value={`$${finalTotal.toFixed(2)}`} highlight />
           </div>
         </div>
 
