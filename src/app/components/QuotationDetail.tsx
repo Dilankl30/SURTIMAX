@@ -123,6 +123,21 @@ export function QuotationDetail() {
     downloadPdf(pdfBlob, fileName);
     window.open(clientWAUrl, '_blank', 'noopener,noreferrer');
   };
+  const handleDownloadPdf = async () => {
+    const printableQuote = { ...quote, discount, totalCotizado, subtotal, iva, finalTotal };
+    const documentElement = document.getElementById('quotation-document');
+    let pdfBlob: Blob;
+
+    try {
+      pdfBlob = documentElement
+        ? await createQuotationPdfBlobFromElement(documentElement)
+        : createQuotationPdfBlob(printableQuote);
+    } catch {
+      pdfBlob = createQuotationPdfBlob(printableQuote);
+    }
+
+    downloadPdf(pdfBlob, `${quote.number}.pdf`);
+  };
 
   const backView = currentUser?.isAdmin ? 'admin-quotes' : 'my-quotes';
 
@@ -134,8 +149,8 @@ export function QuotationDetail() {
         <button onClick={() => setView(backView)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: '2px solid #E0E0E0', background: 'white', cursor: 'pointer', color: '#546E7A', fontSize: 14 }}>
           <ArrowLeft size={16} /> Volver
         </button>
-        <button onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-          <Printer size={16} /> Imprimir / PDF
+        <button onClick={handleDownloadPdf} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+          <Printer size={16} /> Descargar PDF
         </button>
         {currentUser?.isAdmin ? (
           <button
@@ -263,7 +278,7 @@ export function QuotationDetail() {
             <p style={{ color: '#546E7A', margin: 0, fontSize: 12 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
           </div>
 
-          <div style={{ minWidth: 240 }}>
+          <div style={{ minWidth: 280, width: 300 }}>
             <TotalRow label="SUBTOTAL:" value={`$${subtotal.toFixed(2)}`} />
             <TotalRow label="I.V.A. 15%:" value={`$${iva.toFixed(2)}`} />
             <TotalRow
@@ -346,9 +361,9 @@ function ClientEditField({ label, value, onChange, type = 'text' }: { label: str
 
 function TotalRow({ label, value, highlight }: { label: string; value: any; highlight?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: highlight ? '10px 12px' : '7px 12px', backgroundColor: highlight ? '#0D47A1' : 'transparent', borderRadius: highlight ? 8 : 0, marginBottom: highlight ? 0 : 2 }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: highlight ? 'white' : '#546E7A' }}>{label}</span>
-      <span style={{ fontSize: highlight ? 17 : 13, fontWeight: 800, color: highlight ? 'white' : '#0D47A1', minWidth: 100, textAlign: 'right' }}>{value}</span>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', columnGap: 14, alignItems: 'center', padding: highlight ? '10px 12px' : '7px 12px', backgroundColor: highlight ? '#0D47A1' : 'transparent', borderRadius: highlight ? 8 : 0, marginBottom: highlight ? 0 : 2 }}>
+      <span style={{ fontSize: 13, fontWeight: 600, color: highlight ? 'white' : '#546E7A', textAlign: 'left' }}>{label}</span>
+      <span style={{ fontSize: highlight ? 17 : 13, fontWeight: 800, color: highlight ? 'white' : '#0D47A1', minWidth: 110, textAlign: 'right', justifySelf: 'end' }}>{value}</span>
     </div>
   );
 }
