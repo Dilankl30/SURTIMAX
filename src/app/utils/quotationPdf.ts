@@ -98,11 +98,9 @@ function createImagePdfBlob(jpegDataUrl: string, imageWidth: number, imageHeight
 
   const LANDSCAPE_WIDTH = PAGE_HEIGHT;
   const LANDSCAPE_HEIGHT = PAGE_WIDTH;
-  const horizontalGap = 14;
+  const horizontalGap = 10;
   const slotWidth = (LANDSCAPE_WIDTH - PAGE_MARGIN * 2 - horizontalGap) / 2;
-  const slotHeight = LANDSCAPE_HEIGHT - PAGE_MARGIN * 2;
   const slotScale = slotWidth / sourceDisplayWidth;
-  const scaledSliceHeight = sourceDisplayHeight * slotScale;
   const outputPageCount = Math.ceil(sourcePageCount / 2);
 
   const pageObjectStart = 4;
@@ -126,6 +124,7 @@ function createImagePdfBlob(jpegDataUrl: string, imageWidth: number, imageHeight
     const leftX = PAGE_MARGIN;
     const rightX = PAGE_MARGIN + slotWidth + horizontalGap;
     const y = PAGE_MARGIN;
+    const dividerX = PAGE_MARGIN + slotWidth + horizontalGap / 2;
 
     if (leftSliceIndex < sourcePageCount) {
       const leftY = PAGE_HEIGHT - PAGE_MARGIN - sourceDisplayHeight + leftSliceIndex * sourceUsableHeight;
@@ -137,12 +136,8 @@ function createImagePdfBlob(jpegDataUrl: string, imageWidth: number, imageHeight
       content += `q\n${slotScale.toFixed(6)} 0 0 ${slotScale.toFixed(6)} ${rightX.toFixed(2)} ${(y - rightY * slotScale).toFixed(2)} cm\n/Im1 Do\nQ`;
     }
 
-    if (scaledSliceHeight < slotHeight) {
-      const topRuleY = LANDSCAPE_HEIGHT - PAGE_MARGIN;
-      const bottomRuleY = PAGE_MARGIN;
-      content += `\n0.89 0.95 0.99 RG 0.6 w ${PAGE_MARGIN} ${topRuleY.toFixed(2)} m ${LANDSCAPE_WIDTH - PAGE_MARGIN} ${topRuleY.toFixed(2)} l S`;
-      content += `\n0.89 0.95 0.99 RG 0.6 w ${PAGE_MARGIN} ${bottomRuleY.toFixed(2)} m ${LANDSCAPE_WIDTH - PAGE_MARGIN} ${bottomRuleY.toFixed(2)} l S`;
-    }
+    content += `\n0.80 0.84 0.89 RG 0.8 w ${dividerX.toFixed(2)} ${PAGE_MARGIN} m ${dividerX.toFixed(2)} ${(LANDSCAPE_HEIGHT - PAGE_MARGIN).toFixed(2)} l S`;
+    content += `\n0.89 0.95 0.99 RG 0.6 w ${PAGE_MARGIN} ${PAGE_MARGIN} m ${PAGE_MARGIN} ${(LANDSCAPE_HEIGHT - PAGE_MARGIN).toFixed(2)} l ${(LANDSCAPE_WIDTH - PAGE_MARGIN).toFixed(2)} ${(LANDSCAPE_HEIGHT - PAGE_MARGIN).toFixed(2)} l ${(LANDSCAPE_WIDTH - PAGE_MARGIN).toFixed(2)} ${PAGE_MARGIN} l h S`;
 
     objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   }
