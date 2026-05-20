@@ -4,6 +4,7 @@ import {
 } from 'recharts';
 import { TrendingUp, ShoppingBag, Users, DollarSign, CheckCircle, Clock, AlertTriangle, Package } from 'lucide-react';
 import { useStore } from '../../store';
+import { useIsMobile } from '../ui/use-mobile';
 
 const MONTHLY = [
   { mes: 'Dic', ingresos: 3200, cotizaciones: 8 },
@@ -28,6 +29,7 @@ const PIE_COLORS = ['#0D47A1', '#1976D2', '#42A5F5', '#90CAF9', '#7B1FA2', '#546
 
 export function AdminDashboard() {
   const { quotations, products, users } = useStore();
+  const isMobile = useIsMobile();
 
   const totalRevenue = quotations.reduce((s, q) => s + q.finalTotal, 0);
   const delivered = quotations.filter(q => q.status === 'delivered').length;
@@ -60,14 +62,14 @@ export function AdminDashboard() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: isMobile ? 12 : 24, width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ margin: '0 0 4px', color: '#0D47A1', fontWeight: 800 }}>Dashboard de Ventas</h1>
         <p style={{ color: '#78909C', margin: 0, fontSize: 14 }}>Análisis comercial · SURTIMAX · 2026</p>
       </div>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
         {KPIS.map((k, i) => (
           <div key={i} style={{ backgroundColor: 'white', borderRadius: 14, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', borderTop: `4px solid ${k.color}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
@@ -87,7 +89,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Row 1: Area chart + Pie */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, marginBottom: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 2fr) minmax(280px, 1fr)', gap: isMobile ? 12 : 18, marginBottom: 18, alignItems: 'stretch' }}>
         <ChartCard title="📈 Ingresos Mensuales">
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={MONTHLY} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
@@ -120,7 +122,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Row 2: Bar charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: isMobile ? 12 : 18, marginBottom: 18 }}>
         <ChartCard title="📅 Ventas por Día (Esta Semana)">
           <ResponsiveContainer width="100%" height={195}>
             <BarChart data={DAILY} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
@@ -147,9 +149,10 @@ export function AdminDashboard() {
       </div>
 
       {/* Row 3: Top tables */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: isMobile ? 12 : 18, marginBottom: 18 }}>
         <ChartCard title="🏆 Productos Más Cotizados">
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <TableScroll>
+            <table style={{ width: '100%', minWidth: 420, borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: '2px solid #E3F2FD' }}>
                 <th style={rankTh}>#</th>
@@ -170,11 +173,13 @@ export function AdminDashboard() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </TableScroll>
         </ChartCard>
 
         <ChartCard title="👑 Top Clientes por Monto">
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <TableScroll>
+            <table style={{ width: '100%', minWidth: 420, borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: '2px solid #E3F2FD' }}>
                 <th style={rankTh}>#</th>
@@ -195,7 +200,8 @@ export function AdminDashboard() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </TableScroll>
         </ChartCard>
       </div>
 
@@ -219,12 +225,22 @@ export function AdminDashboard() {
 }
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+  const isMobile = useIsMobile();
+
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: 14, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+    <div style={{ backgroundColor: 'white', borderRadius: 14, padding: isMobile ? '14px 12px' : '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', minWidth: 0, overflow: 'hidden' }}>
       <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: '#1A237E' }}>{title}</h3>
       {children}
     </div>
   );
 }
 
-const rankTh: React.CSSProperties = { padding: '9px 8px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#78909C' };
+function TableScroll({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
+      {children}
+    </div>
+  );
+}
+
+const rankTh: React.CSSProperties = { padding: '9px 8px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#78909C', whiteSpace: 'nowrap' };

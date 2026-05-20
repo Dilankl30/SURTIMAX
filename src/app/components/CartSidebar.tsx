@@ -1,9 +1,22 @@
-import { X, Plus, Minus, Trash2, ShoppingBag, MessageCircle, Tag } from 'lucide-react';
+import { useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { X, Plus, Minus, Trash2, ShoppingBag, MessageCircle, Tag, User, CreditCard, MapPin, Phone, Mail } from 'lucide-react';
 import { useStore } from '../store';
-import type { Product } from '../store';
+import type { Product, QuotationClientData } from '../store';
+
+const emptyPhysicalClient: QuotationClientData = {
+  clientName: '',
+  clientCedula: '',
+  clientAddress: '',
+  clientPhone: '',
+  clientEmail: '',
+};
 
 export function CartSidebar() {
   const { cart, cartOpen, setCartOpen, products, updateCartQuantity, removeFromCart, currentUser, setAuthOpen, createQuotation } = useStore();
+  const [physicalClient, setPhysicalClient] = useState<QuotationClientData>(emptyPhysicalClient);
+  const [clientError, setClientError] = useState('');
+  const [quoteStep, setQuoteStep] = useState<'summary' | 'client'>('summary');
 
   const cartItems = cart.map(item => ({
     ...item,
@@ -14,10 +27,29 @@ export function CartSidebar() {
   const subtotal = total / 1.15;
   const iva = total - subtotal;
 
+  const handlePhysicalClientChange = (field: keyof QuotationClientData, value: string) => {
+    setPhysicalClient(prev => ({ ...prev, [field]: value }));
+    if (clientError) setClientError('');
+  };
+
+  const validatePhysicalClient = () => {
+    if (!currentUser?.isAdmin) return true;
+    const requiredFields: Array<keyof QuotationClientData> = ['clientName', 'clientCedula', 'clientAddress', 'clientPhone', 'clientEmail'];
+    return requiredFields.every(field => String(physicalClient[field] ?? '').trim());
+  };
+
   const handleQuote = () => {
     if (!currentUser) {
       setCartOpen(false);
       setAuthOpen(true);
+      return;
+    }
+    if (currentUser.isAdmin && quoteStep === 'summary') {
+      setQuoteStep('client');
+      return;
+    }
+    if (!validatePhysicalClient()) {
+      setClientError('Completa todos los datos del cliente físico para generar la cotización.');
       return;
     }
     const items = cartItems.map(i => ({
@@ -26,7 +58,15 @@ export function CartSidebar() {
       quantity: i.quantity,
       unitPrice: i.product.price,
     }));
-    createQuotation(items);
+    createQuotation(items, 0, currentUser.isAdmin ? {
+      clientName: physicalClient.clientName.trim(),
+      clientCedula: physicalClient.clientCedula.trim(),
+      clientAddress: physicalClient.clientAddress.trim(),
+      clientPhone: physicalClient.clientPhone.trim(),
+      clientEmail: physicalClient.clientEmail?.trim(),
+    } : undefined);
+    setPhysicalClient(emptyPhysicalClient);
+    setQuoteStep('summary');
     setCartOpen(false);
   };
 
@@ -34,8 +74,8 @@ export function CartSidebar() {
 
   return (
     <>
-      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 200 }} onClick={() => setCartOpen(false)} />
-      <div style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: Math.min(420, window.innerWidth), backgroundColor: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.2)' }}>
+      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 200 }} onClick={() => { setCartOpen(false); setQuoteStep('summary'); }} />
+      <div style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: 'min(100vw, 460px)', maxWidth: '100vw', backgroundColor: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.2)' }}>
 
         {/* Header */}
         <div style={{ padding: '20px 24px', background: 'linear-gradient(135deg, #0D47A1, #1976D2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'white' }}>
@@ -46,7 +86,7 @@ export function CartSidebar() {
               <div style={{ fontSize: 12, opacity: 0.85 }}>{cart.reduce((s, i) => s + i.quantity, 0)} unidades · {cartItems.length} producto{cartItems.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
-          <button onClick={() => setCartOpen(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center' }}>
+          <button onClick={() => { setCartOpen(false); setQuoteStep('summary'); }} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center' }}>
             <X size={18} />
           </button>
         </div>
@@ -60,9 +100,9 @@ export function CartSidebar() {
               <p style={{ fontSize: 13, margin: 0 }}>Agrega productos del catálogo para cotizar</p>
             </div>
           ) : cartItems.map(item => (
-            <div key={item.productId} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F5F5F5' }}>
-              <div style={{ width: 46, height: 46, borderRadius: 10, background: 'linear-gradient(135deg, #E3F2FD, #BBDEFB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
-                🍬
+            <div key={item.productId} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F5F5F5', flexWrap: 'wrap' }}>
+              <div style={{ width: 46, height: 46, borderRadius: 10, background: 'linear-gradient(135deg, #E3F2FD, #BBDEFB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0, overflow: 'hidden' }}>
+                {item.product.imageUrl ? <img src={item.product.imageUrl} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🍬'}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#1A237E', marginBottom: 2, lineHeight: 1.3 }}>{item.product.name}</div>
@@ -89,7 +129,7 @@ export function CartSidebar() {
 
         {/* Footer */}
         {cartItems.length > 0 && (
-          <div style={{ padding: '16px 20px 24px', borderTop: '1px solid #E3F2FD' }}>
+          <div style={{ padding: '16px 20px 24px', borderTop: '1px solid #E3F2FD', maxHeight: quoteStep === 'client' ? 'min(72vh, calc(100vh - 104px))' : 'none', overflowY: quoteStep === 'client' ? 'auto' : 'visible', WebkitOverflowScrolling: 'touch', flexShrink: 0 }}>
             {/* Totals */}
             <div style={{ backgroundColor: '#F8FAFE', borderRadius: 12, padding: '14px 16px', marginBottom: 16, border: '1px solid #E3F2FD' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13, color: '#546E7A' }}>
@@ -112,11 +152,45 @@ export function CartSidebar() {
               </div>
             )}
 
+            {currentUser?.isAdmin && quoteStep === 'client' && (
+              <div style={{ backgroundColor: '#F8FAFE', border: '1px solid #D0E8FF', borderRadius: 12, padding: '12px', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#0D47A1' }}>Datos del cliente físico</div>
+                    <div style={{ fontSize: 11, color: '#78909C', marginTop: 2 }}>Completa estos datos para generar la cotización.</div>
+                  </div>
+                  <button onClick={() => { setQuoteStep('summary'); setClientError(''); }} style={{ background: 'white', border: '1px solid #BBDEFB', color: '#0D47A1', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>Volver</button>
+                </div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <ClientField label="Nombre completo / Razón social *" icon={<User size={13} />}>
+                    <input value={physicalClient.clientName} onChange={e => handlePhysicalClientChange('clientName', e.target.value)} placeholder="Juan Carlos Pérez" style={clientInput} />
+                  </ClientField>
+                  <ClientField label="Cédula / RUC *" icon={<CreditCard size={13} />}>
+                    <input value={physicalClient.clientCedula} onChange={e => handlePhysicalClientChange('clientCedula', e.target.value)} placeholder="1712345678" style={clientInput} />
+                  </ClientField>
+                  <ClientField label="Dirección *" icon={<MapPin size={13} />}>
+                    <input value={physicalClient.clientAddress} onChange={e => handlePhysicalClientChange('clientAddress', e.target.value)} placeholder="Av. 10 de Agosto 123, Quito" style={clientInput} />
+                  </ClientField>
+                  <ClientField label="Teléfono *" icon={<Phone size={13} />}>
+                    <input value={physicalClient.clientPhone} onChange={e => handlePhysicalClientChange('clientPhone', e.target.value)} placeholder="0991234567" style={clientInput} />
+                  </ClientField>
+                  <ClientField label="Correo electrónico *" icon={<Mail size={13} />}>
+                    <input value={physicalClient.clientEmail ?? ''} onChange={e => handlePhysicalClientChange('clientEmail', e.target.value)} type="email" placeholder="correo@ejemplo.com" style={clientInput} />
+                  </ClientField>
+                </div>
+                {clientError && (
+                  <div style={{ backgroundColor: '#FFEBEE', border: '1px solid #FFCDD2', color: '#C62828', borderRadius: 8, padding: '8px 10px', marginTop: 10, fontSize: 12 }}>
+                    ⚠️ {clientError}
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               onClick={handleQuote}
               style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #0D47A1, #1976D2)', color: 'white', cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: '0 4px 16px rgba(13,71,161,0.3)', marginBottom: 10 }}
             >
-              {currentUser ? '📋 Generar Cotización' : '🔐 Registrarse y Cotizar'}
+              {currentUser?.isAdmin ? (quoteStep === 'summary' ? '🧾 Realizar Cotización' : '📋 Generar Cotización para Cliente') : currentUser ? '📋 Generar Cotización' : '🔐 Registrarse y Cotizar'}
             </button>
 
             <a
@@ -132,3 +206,24 @@ export function CartSidebar() {
     </>
   );
 }
+
+function ClientField({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
+  return (
+    <label style={{ display: 'grid', gap: 5 }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: '#455A64', textTransform: 'uppercase', letterSpacing: 0.2 }}>
+        <span style={{ color: '#1976D2' }}>{icon}</span> {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+const clientInput: CSSProperties = {
+  width: '100%',
+  boxSizing: 'border-box',
+  padding: '9px 10px',
+  border: '1px solid #BBDEFB',
+  borderRadius: 8,
+  fontSize: 13,
+  outline: 'none',
+};
