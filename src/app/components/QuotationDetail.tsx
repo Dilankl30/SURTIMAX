@@ -126,18 +126,16 @@ export function QuotationDetail() {
     window.open(clientWAUrl, '_blank', 'noopener,noreferrer');
   };
   const handleDownloadPdf = async () => {
+    const printableQuote = { ...quote, discount, totalCotizado, subtotal, iva, finalTotal };
     const documentElement = document.getElementById('quotation-document');
-    if (!documentElement) {
-      alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
-      return;
-    }
     let pdfBlob: Blob;
 
     try {
-      pdfBlob = await createQuotationPdfBlobFromElement(documentElement);
+      pdfBlob = documentElement
+        ? await createQuotationPdfBlobFromElement(documentElement)
+        : createQuotationPdfBlob(printableQuote);
     } catch {
-      alert('No se pudo generar el PDF visual de la prefactura en este dispositivo. Intenta desde otro navegador o desde escritorio.');
-      return;
+      pdfBlob = createQuotationPdfBlob(printableQuote);
     }
 
     downloadPdf(pdfBlob, `${quote.number}.pdf`);
