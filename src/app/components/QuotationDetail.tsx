@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Printer, ArrowLeft, MessageCircle, Edit2, Save, X } from 'lucide-react';
 import { useStore } from '../store';
 import type { QuotationClientData } from '../store';
-import { createQuotationPdfBlob, createQuotationPdfBlobFromElement } from '../utils/quotationPdf';
+import { createQuotationPdfBlobFromElement } from '../utils/quotationPdf';
 import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
 
 export function QuotationDetail() {
@@ -32,7 +32,7 @@ export function QuotationDetail() {
   if (!quote) {
     return (
       <div style={{ maxWidth: 900, margin: '0 auto', padding: 48, textAlign: 'center' }}>
-        <p style={{ color: '#78909C' }}>Cotización no encontrada</p>
+        <p style={{ color: '#78909C' }}>Prefactura no encontrada</p>
         <button onClick={() => setView('catalog')} style={{ marginTop: 16, padding: '10px 24px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer' }}>Volver al catálogo</button>
       </div>
     );
@@ -73,11 +73,11 @@ export function QuotationDetail() {
 
   const clientWANum = normalizeWhatsAppNumber(quote.clientPhone);
   const clientWAMsg = encodeURIComponent(
-    `Hola ${quote.clientName}, su cotización *${quote.number}* por un total de *$${finalTotal.toFixed(2)}* está lista.\n\nProductos:\n` +
+    `Hola ${quote.clientName}, su prefactura *${quote.number}* por un total de *$${finalTotal.toFixed(2)}* está lista.\n\nProductos:\n` +
     quote.items.map(i => `• ${i.description} x${i.quantity} = $${(i.quantity * i.unitPrice).toFixed(2)}`).join('\n') +
     `\n\n_SURTIMAX - variedad y buen precio_`
   );
-  const adminWAMsg = encodeURIComponent(`Hola SURTIMAX, quiero información sobre mi cotización ${quote.number}`);
+  const adminWAMsg = encodeURIComponent(`Hola SURTIMAX, quiero información sobre mi prefactura ${quote.number}`);
   const clientWAUrl = `https://wa.me/${clientWANum}?text=${clientWAMsg}`;
 
   const downloadPdf = (blob: Blob, fileName: string) => {
@@ -92,16 +92,18 @@ export function QuotationDetail() {
   };
 
   const handleSendClientWhatsApp = async () => {
-    const printableQuote = { ...quote, discount, totalCotizado, subtotal, iva, finalTotal };
     const documentElement = document.getElementById('quotation-document');
+    if (!documentElement) {
+      alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
+      return;
+    }
     let pdfBlob: Blob;
 
     try {
-      pdfBlob = documentElement
-        ? await createQuotationPdfBlobFromElement(documentElement)
-        : createQuotationPdfBlob(printableQuote);
+      pdfBlob = await createQuotationPdfBlobFromElement(documentElement);
     } catch {
-      pdfBlob = createQuotationPdfBlob(printableQuote);
+      alert('No se pudo generar el PDF visual de la prefactura en este dispositivo. Intenta desde otro navegador o desde escritorio.');
+      return;
     }
 
     const fileName = `${quote.number}.pdf`;
@@ -110,7 +112,7 @@ export function QuotationDetail() {
     if (navigator.canShare?.({ files: [pdfFile] })) {
       try {
         await navigator.share({
-          title: `Cotización ${quote.number}`,
+          title: `Prefactura ${quote.number}`,
           text: decodeURIComponent(clientWAMsg),
           files: [pdfFile],
         });
@@ -123,6 +125,23 @@ export function QuotationDetail() {
     downloadPdf(pdfBlob, fileName);
     window.open(clientWAUrl, '_blank', 'noopener,noreferrer');
   };
+  const handleDownloadPdf = async () => {
+    const documentElement = document.getElementById('quotation-document');
+    if (!documentElement) {
+      alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
+      return;
+    }
+    let pdfBlob: Blob;
+
+    try {
+      pdfBlob = await createQuotationPdfBlobFromElement(documentElement);
+    } catch {
+      alert('No se pudo generar el PDF visual de la prefactura en este dispositivo. Intenta desde otro navegador o desde escritorio.');
+      return;
+    }
+
+    downloadPdf(pdfBlob, `${quote.number}.pdf`);
+  };
 
   const backView = currentUser?.isAdmin ? 'admin-quotes' : 'my-quotes';
 
@@ -134,8 +153,8 @@ export function QuotationDetail() {
         <button onClick={() => setView(backView)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: '2px solid #E0E0E0', background: 'white', cursor: 'pointer', color: '#546E7A', fontSize: 14 }}>
           <ArrowLeft size={16} /> Volver
         </button>
-        <button onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-          <Printer size={16} /> Imprimir / PDF
+        <button onClick={handleDownloadPdf} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+          <Printer size={16} /> Descargar PDF
         </button>
         {currentUser?.isAdmin ? (
           <button
@@ -146,7 +165,7 @@ export function QuotationDetail() {
           </button>
         ) : (
           <a
-            href={`https://wa.me/593989961041?text=${adminWAMsg}`}
+            href={`https://wa.me/593958737004?text=${adminWAMsg}`}
             target="_blank" rel="noopener noreferrer"
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#25D366', color: 'white', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}
           >
@@ -169,18 +188,18 @@ export function QuotationDetail() {
         {/* Header */}
         <div style={{ padding: '24px 32px', borderBottom: '3px solid #0D47A1', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 58, objectFit: 'contain', marginBottom: 10 }} />
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 110, objectFit: 'contain', marginBottom: 10 }} />
             <div style={{ fontSize: 12, color: '#546E7A', lineHeight: 1.8 }}>
-              <div><strong style={{ color: '#0D47A1' }}>DIRECCIÓN:</strong> QUITO</div>
-              <div><strong style={{ color: '#0D47A1' }}>RUC:</strong> 2200123456001</div>
-              <div><strong style={{ color: '#0D47A1' }}>TELÉFONO:</strong> 0989961041</div>
+              <div><strong style={{ color: '#0D47A1' }}>CIUDAD:</strong> QUITO</div>
+              <div><strong style={{ color: '#0D47A1' }}>CI O RUC:</strong> 2100282249001</div>
+              <div><strong style={{ color: '#0D47A1' }}>TLF:</strong> 0958737004</div>
               <div><strong style={{ color: '#0D47A1' }}>EMAIL:</strong> ventas@surtimax.com</div>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <h1 style={{ color: '#0D47A1', fontSize: 30, fontWeight: 800, margin: '0 0 14px', letterSpacing: 2 }}>COTIZACIÓN</h1>
+            <h1 style={{ color: '#0D47A1', fontSize: 30, fontWeight: 800, margin: '0 0 14px', letterSpacing: 2 }}>PREFACTURA</h1>
             <div style={{ fontSize: 13, color: '#546E7A', lineHeight: 1.8 }}>
-              <div><strong>No. Cotización:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
+              <div><strong>No. Prefactura:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
               <div><strong>Fecha:</strong> {new Date(quote.date).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
             </div>
             <div style={{ marginTop: 10 }}>
@@ -194,7 +213,7 @@ export function QuotationDetail() {
         {/* Client info */}
         <div style={{ padding: '18px 32px', backgroundColor: '#F8FAFE', borderBottom: '1px solid #E3F2FD' }}>
           <h3 style={{ margin: '0 0 12px', color: '#0D47A1', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 6, display: 'inline-block' }}>
-            Información de la Cotización Para:
+            Información del cliente:
           </h3>
           {currentUser?.isAdmin && (
             <div className="no-print" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -251,15 +270,6 @@ export function QuotationDetail() {
                     <td style={{ ...tdC, fontWeight: 700, color: '#0D47A1' }}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
                   </tr>
                 ))}
-                {Array.from({ length: Math.max(0, 8 - quote.items.length) }).map((_, i) => (
-                  <tr key={`empty-${i}`} style={{ borderBottom: '1px solid #E3F2FD' }}>
-                    <td style={{ ...tdC, height: 34 }} />
-                    <td style={tdC} />
-                    <td style={{ ...tdC, textAlign: 'left', paddingLeft: 16 }} />
-                    <td style={tdC} />
-                    <td style={tdC} />
-                  </tr>
-                ))}
               </tbody>
             </table>
           </div>
@@ -269,11 +279,10 @@ export function QuotationDetail() {
         <div style={{ padding: '20px 32px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '1px solid #E3F2FD', flexWrap: 'wrap', gap: 24 }}>
           <div style={{ maxWidth: 420 }}>
             <h4 style={{ color: '#0D47A1', margin: '0 0 10px', fontWeight: 700, fontSize: 13 }}>VALIDEZ Y CONDICIONES COMERCIALES:</h4>
-            <p style={{ color: '#EF5350', margin: '0 0 6px', fontSize: 12 }}>• Los precios reflejados están sujetos a cambios sin previo aviso.</p>
             <p style={{ color: '#546E7A', margin: 0, fontSize: 12 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
           </div>
 
-          <div style={{ minWidth: 240 }}>
+          <div style={{ minWidth: 280, width: 300 }}>
             <TotalRow label="SUBTOTAL:" value={`$${subtotal.toFixed(2)}`} />
             <TotalRow label="I.V.A. 15%:" value={`$${iva.toFixed(2)}`} />
             <TotalRow
@@ -305,7 +314,7 @@ export function QuotationDetail() {
               }
             />
             <div style={{ height: 1, backgroundColor: '#E3F2FD', margin: '8px 0' }} />
-            <TotalRow label="TOTAL COTIZADO:" value={`$${finalTotal.toFixed(2)}`} highlight />
+            <TotalRow label="TOTAL PREFACTURA:" value={`$${finalTotal.toFixed(2)}`} highlight />
           </div>
         </div>
 
@@ -356,9 +365,9 @@ function ClientEditField({ label, value, onChange, type = 'text' }: { label: str
 
 function TotalRow({ label, value, highlight }: { label: string; value: any; highlight?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: highlight ? '10px 12px' : '7px 12px', backgroundColor: highlight ? '#0D47A1' : 'transparent', borderRadius: highlight ? 8 : 0, marginBottom: highlight ? 0 : 2 }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: highlight ? 'white' : '#546E7A' }}>{label}</span>
-      <span style={{ fontSize: highlight ? 17 : 13, fontWeight: 800, color: highlight ? 'white' : '#0D47A1', minWidth: 100, textAlign: 'right' }}>{value}</span>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', columnGap: 14, alignItems: 'center', padding: highlight ? '10px 12px' : '7px 12px', backgroundColor: highlight ? '#0D47A1' : 'transparent', borderRadius: highlight ? 8 : 0, marginBottom: highlight ? 0 : 2 }}>
+      <span style={{ fontSize: 13, fontWeight: 600, color: highlight ? 'white' : '#546E7A', textAlign: 'left' }}>{label}</span>
+      <span style={{ fontSize: highlight ? 17 : 13, fontWeight: 800, color: highlight ? 'white' : '#0D47A1', minWidth: 110, textAlign: 'right', justifySelf: 'end' }}>{value}</span>
     </div>
   );
 }

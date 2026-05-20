@@ -84,35 +84,61 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('No se pudo renderizar el documento de cotización.'));
+    image.onerror = () => reject(new Error('No se pudo renderizar el documento de prefactura.'));
     image.src = src;
   });
 }
 
 function createImagePdfBlob(jpegDataUrl: string, imageWidth: number, imageHeight: number): Blob {
   const jpegBinary = atob(jpegDataUrl.split(',')[1] ?? '');
-  const imageDisplayWidth = PAGE_WIDTH - PAGE_MARGIN * 2;
-  const imageDisplayHeight = (imageHeight / imageWidth) * imageDisplayWidth;
-  const usablePageHeight = PAGE_HEIGHT - PAGE_MARGIN * 2;
-  const pageCount = Math.max(1, Math.ceil(imageDisplayHeight / usablePageHeight));
+  const sourceDisplayWidth = PAGE_WIDTH - PAGE_MARGIN * 2;
+  const sourceDisplayHeight = (imageHeight / imageWidth) * sourceDisplayWidth;
+  const sourceUsableHeight = PAGE_HEIGHT - PAGE_MARGIN * 2;
+  const sourcePageCount = Math.max(1, Math.ceil(sourceDisplayHeight / sourceUsableHeight));
+
+  const LANDSCAPE_WIDTH = PAGE_HEIGHT;
+  const LANDSCAPE_HEIGHT = PAGE_WIDTH;
+  const horizontalGap = 10;
+  const slotWidth = (LANDSCAPE_WIDTH - PAGE_MARGIN * 2 - horizontalGap) / 2;
+  const slotScale = slotWidth / sourceDisplayWidth;
+  const outputPageCount = Math.ceil(sourcePageCount / 2);
 
   const pageObjectStart = 4;
-  const contentObjectStart = pageObjectStart + pageCount;
-  const imageObjectNumber = contentObjectStart + pageCount;
-  const kids = Array.from({ length: pageCount }, (_, index) => `${pageObjectStart + index} 0 R`).join(' ');
+  const contentObjectStart = pageObjectStart + outputPageCount;
+  const imageObjectNumber = contentObjectStart + outputPageCount;
+  const kids = Array.from({ length: outputPageCount }, (_, index) => `${pageObjectStart + index} 0 R`).join(' ');
 
   const objects: string[] = [
     '<< /Type /Catalog /Pages 2 0 R >>',
-    `<< /Type /Pages /Kids [${kids}] /Count ${pageCount} >>`,
+    `<< /Type /Pages /Kids [${kids}] /Count ${outputPageCount} >>`,
   ];
 
-  for (let index = 0; index < pageCount; index += 1) {
-    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}] /Resources << /XObject << /Im1 ${imageObjectNumber} 0 R >> >> /Contents ${contentObjectStart + index} 0 R >>`);
+  for (let index = 0; index < outputPageCount; index += 1) {
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${LANDSCAPE_WIDTH} ${LANDSCAPE_HEIGHT}] /Resources << /XObject << /Im1 ${imageObjectNumber} 0 R >> >> /Contents ${contentObjectStart + index} 0 R >>`);
   }
 
-  for (let index = 0; index < pageCount; index += 1) {
-    const y = PAGE_HEIGHT - PAGE_MARGIN - imageDisplayHeight + index * usablePageHeight;
-    const content = `q\n${imageDisplayWidth.toFixed(2)} 0 0 ${imageDisplayHeight.toFixed(2)} ${PAGE_MARGIN} ${y.toFixed(2)} cm\n/Im1 Do\nQ`;
+  for (let index = 0; index < outputPageCount; index += 1) {
+    let content = '';
+    const leftSliceIndex = index * 2;
+    const rightSliceIndex = leftSliceIndex + 1;
+    const leftX = PAGE_MARGIN;
+    const rightX = PAGE_MARGIN + slotWidth + horizontalGap;
+    const y = PAGE_MARGIN;
+    const dividerX = PAGE_MARGIN + slotWidth + horizontalGap / 2;
+
+    if (leftSliceIndex < sourcePageCount) {
+      const leftY = PAGE_HEIGHT - PAGE_MARGIN - sourceDisplayHeight + leftSliceIndex * sourceUsableHeight;
+      content += `q\n${slotScale.toFixed(6)} 0 0 ${slotScale.toFixed(6)} ${leftX.toFixed(2)} ${(y - leftY * slotScale).toFixed(2)} cm\n/Im1 Do\nQ\n`;
+    }
+
+    if (rightSliceIndex < sourcePageCount) {
+      const rightY = PAGE_HEIGHT - PAGE_MARGIN - sourceDisplayHeight + rightSliceIndex * sourceUsableHeight;
+      content += `q\n${slotScale.toFixed(6)} 0 0 ${slotScale.toFixed(6)} ${rightX.toFixed(2)} ${(y - rightY * slotScale).toFixed(2)} cm\n/Im1 Do\nQ`;
+    }
+
+    content += `\n0.80 0.84 0.89 RG 0.8 w ${dividerX.toFixed(2)} ${PAGE_MARGIN} m ${dividerX.toFixed(2)} ${(LANDSCAPE_HEIGHT - PAGE_MARGIN).toFixed(2)} l S`;
+    content += `\n0.89 0.95 0.99 RG 0.6 w ${PAGE_MARGIN} ${PAGE_MARGIN} m ${PAGE_MARGIN} ${(LANDSCAPE_HEIGHT - PAGE_MARGIN).toFixed(2)} l ${(LANDSCAPE_WIDTH - PAGE_MARGIN).toFixed(2)} ${(LANDSCAPE_HEIGHT - PAGE_MARGIN).toFixed(2)} l ${(LANDSCAPE_WIDTH - PAGE_MARGIN).toFixed(2)} ${PAGE_MARGIN} l h S`;
+
     objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   }
 
@@ -164,7 +190,7 @@ function buildPdfLines(quote: Quotation): string[] {
   ));
 
   return [
-    `Cotizacion: ${quote.number}`,
+    `Prefactura: ${quote.number}`,
     `Fecha: ${new Date(quote.date).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}`,
     '',
     'DATOS DEL CLIENTE',
@@ -179,10 +205,9 @@ function buildPdfLines(quote: Quotation): string[] {
     `Subtotal sin IVA: $${quote.subtotal.toFixed(2)}`,
     `IVA 15%: $${quote.iva.toFixed(2)}`,
     `Descuento: $${quote.discount.toFixed(2)}`,
-    `TOTAL COTIZADO: $${quote.finalTotal.toFixed(2)}`,
+    `TOTAL PREFACTURA: $${quote.finalTotal.toFixed(2)}`,
     '',
     'Validez y condiciones comerciales:',
-    'Los precios reflejados estan sujetos a cambios sin previo aviso.',
     'Tiempo de entrega estimado segun disponibilidad de inventario.',
   ];
 }
