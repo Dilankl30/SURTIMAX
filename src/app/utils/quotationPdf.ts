@@ -84,7 +84,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('No se pudo renderizar el documento de cotización.'));
+    image.onerror = () => reject(new Error('No se pudo renderizar el documento de prefactura.'));
     image.src = src;
   });
 }
@@ -164,7 +164,7 @@ function buildPdfLines(quote: Quotation): string[] {
   ));
 
   return [
-    `Cotizacion: ${quote.number}`,
+    `Prefactura: ${quote.number}`,
     `Fecha: ${new Date(quote.date).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}`,
     '',
     'DATOS DEL CLIENTE',
@@ -179,7 +179,7 @@ function buildPdfLines(quote: Quotation): string[] {
     `Subtotal sin IVA: $${quote.subtotal.toFixed(2)}`,
     `IVA 15%: $${quote.iva.toFixed(2)}`,
     `Descuento: $${quote.discount.toFixed(2)}`,
-    `TOTAL COTIZADO: $${quote.finalTotal.toFixed(2)}`,
+    `TOTAL PREFACTURA: $${quote.finalTotal.toFixed(2)}`,
     '',
     'Validez y condiciones comerciales:',
     'Los precios reflejados estan sujetos a cambios sin previo aviso.',
