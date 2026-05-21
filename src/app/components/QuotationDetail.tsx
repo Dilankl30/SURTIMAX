@@ -41,6 +41,7 @@ export function QuotationDetail() {
   const subtotal = totalCotizado / 1.15;
   const iva = totalCotizado - subtotal;
   const finalTotal = totalCotizado - discount;
+  const emissionDate = quote.date && !Number.isNaN(new Date(quote.date).getTime()) ? quote.date : new Date().toISOString().slice(0, 10);
 
   const handleSaveDiscount = () => {
     const d = Math.max(0, parseFloat(tempDiscount) || 0);
@@ -124,6 +125,7 @@ export function QuotationDetail() {
       </div>
 
       {/* Document */}
+      <div className="quotation-print-root">
       <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 820, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif' }}>
 
         {/* Header */}
@@ -141,7 +143,7 @@ export function QuotationDetail() {
             <h1 style={{ color: '#000', fontSize: 30, fontWeight: 800, margin: '0 0 14px', letterSpacing: 2 }}>PREFACTURA</h1>
             <div style={{ fontSize: 13, color: '#000', lineHeight: 1.8 }}>
               <div><strong>No. Prefactura:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
-              <div><strong>Fecha:</strong> {new Date(quote.date).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+              <div><strong>Fecha:</strong> {new Date(emissionDate).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
             </div>
             <div style={{ marginTop: 10 }}>
               <span style={{ padding: '4px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, backgroundColor: quote.status === 'delivered' ? '#E8F5E9' : '#FFF3E0', color: quote.status === 'delivered' ? '#2E7D32' : '#E65100' }}>
@@ -247,9 +249,12 @@ export function QuotationDetail() {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => setEditingDiscount(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#000', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, fontSize: 13, padding: 0 }}>
-                      ${discount.toFixed(2)} <Edit2 size={12} style={{ color: '#1976D2' }} />
-                    </button>
+                    <>
+                      <button className="no-print" onClick={() => setEditingDiscount(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#000', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, fontSize: 13, padding: 0, justifySelf: 'end' }}>
+                        ${discount.toFixed(2)} <Edit2 size={12} style={{ color: '#1976D2' }} />
+                      </button>
+                      <span className="only-print" style={{ display: 'none' }}>${discount.toFixed(2)}</span>
+                    </>
                   )
                 ) : `$${discount.toFixed(2)}`
               }
@@ -266,10 +271,15 @@ export function QuotationDetail() {
           </div>
         </div>
       </div>
+      </div>
 
       <style>{`
         @media print {
+          body * { visibility: hidden !important; }
+          .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
+          .quotation-print-root { position: absolute; left: 0; top: 0; width: 100%; }
           .no-print { display: none !important; }
+          .only-print { display: inline !important; }
           body { background: white !important; }
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
           #quotation-document { box-shadow: none !important; border: 1px solid #000 !important; border-radius: 0 !important; background: #fff !important; }
