@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Printer, ArrowLeft, MessageCircle, Edit2, Save, X } from 'lucide-react';
 import { useStore } from '../store';
 import type { QuotationClientData } from '../store';
-import { createQuotationPdfBlobFromElement, createQuotationPdfBlob } from '../utils/quotationPdf';
 import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
 
 export function QuotationDetail() {
@@ -80,75 +79,8 @@ export function QuotationDetail() {
   const adminWAMsg = encodeURIComponent(`Hola SURTIMAX, quiero información sobre mi prefactura ${quote.number}`);
   const clientWAUrl = `https://wa.me/${clientWANum}?text=${clientWAMsg}`;
 
-  const downloadPdf = (blob: Blob, fileName: string) => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  };
-
-
-  const generatePdfBlob = async (documentElement: HTMLElement): Promise<{ blob: Blob; fallbackUsed: boolean }> => {
-    try {
-      const visualBlob = await createQuotationPdfBlobFromElement(documentElement);
-      return { blob: visualBlob, fallbackUsed: false };
-    } catch {
-      const fallbackBlob = createQuotationPdfBlob({
-        ...quote,
-        discount,
-        finalTotal,
-      });
-      return { blob: fallbackBlob, fallbackUsed: true };
-    }
-  };
-
-  const handleSendClientWhatsApp = async () => {
-    const documentElement = document.getElementById('quotation-document');
-    if (!documentElement) {
-      alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
-      return;
-    }
-    const { blob: pdfBlob, fallbackUsed } = await generatePdfBlob(documentElement);
-
-    if (fallbackUsed) {
-      alert('Tu dispositivo no permitió generar el PDF visual. Se descargará una versión compatible con el mismo contenido.');
-    }
-
-    const fileName = `${quote.number}.pdf`;
-    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
-    if (navigator.canShare?.({ files: [pdfFile] })) {
-      try {
-        await navigator.share({
-          title: `Prefactura ${quote.number}`,
-          text: decodeURIComponent(clientWAMsg),
-          files: [pdfFile],
-        });
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') return;
-      }
-    }
-
-    downloadPdf(pdfBlob, fileName);
-    window.open(clientWAUrl, '_blank', 'noopener,noreferrer');
-  };
-  const handleDownloadPdf = async () => {
-    const documentElement = document.getElementById('quotation-document');
-    if (!documentElement) {
-      alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
-      return;
-    }
-    const { blob: pdfBlob, fallbackUsed } = await generatePdfBlob(documentElement);
-    if (fallbackUsed) {
-      alert('Tu dispositivo no permitió generar el PDF visual. Se descargará una versión compatible con el mismo contenido.');
-    }
-
-    downloadPdf(pdfBlob, `${quote.number}.pdf`);
+  const handlePrintPreview = () => {
+    window.print();
   };
 
   const backView = currentUser?.isAdmin ? 'admin-quotes' : 'my-quotes';
@@ -158,19 +90,20 @@ export function QuotationDetail() {
 
       {/* Action bar */}
       <div className="no-print" style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button onClick={() => setView(backView)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: '2px solid #E0E0E0', background: 'white', cursor: 'pointer', color: '#546E7A', fontSize: 14 }}>
+        <button onClick={() => setView(backView)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: '2px solid #E0E0E0', background: 'white', cursor: 'pointer', color: '#000', fontSize: 14 }}>
           <ArrowLeft size={16} /> Volver
         </button>
-        <button onClick={handleDownloadPdf} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-          <Printer size={16} /> Descargar PDF
+        <button onClick={handlePrintPreview} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+          <Printer size={16} /> Visualizar / Imprimir
         </button>
         {currentUser?.isAdmin ? (
-          <button
-            onClick={handleSendClientWhatsApp}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#25D366', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+          <a
+            href={clientWAUrl}
+            target="_blank" rel="noopener noreferrer"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#25D366', color: 'white', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}
           >
-            <MessageCircle size={16} /> Enviar PDF por WhatsApp
-          </button>
+            <MessageCircle size={16} /> Enviar por WhatsApp
+          </a>
         ) : (
           <a
             href={`https://wa.me/593958737004?text=${adminWAMsg}`}
@@ -191,22 +124,22 @@ export function QuotationDetail() {
       </div>
 
       {/* Document */}
-      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 28px rgba(0,0,0,0.1)', border: '1px solid #E3F2FD' }}>
+      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 820, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif' }}>
 
         {/* Header */}
-        <div style={{ padding: '24px 32px', borderBottom: '3px solid #0D47A1', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+        <div style={{ padding: '24px 32px', borderBottom: '2px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <img src={logoImg} alt="SURTIMAX" style={{ height: 110, objectFit: 'contain', marginBottom: 10 }} />
-            <div style={{ fontSize: 12, color: '#546E7A', lineHeight: 1.8 }}>
-              <div><strong style={{ color: '#0D47A1' }}>CIUDAD:</strong> QUITO</div>
-              <div><strong style={{ color: '#0D47A1' }}>CI O RUC:</strong> 2100282249001</div>
-              <div><strong style={{ color: '#0D47A1' }}>TLF:</strong> 0958737004</div>
-              <div><strong style={{ color: '#0D47A1' }}>EMAIL:</strong> ventas@surtimax.com</div>
+            <div style={{ fontSize: 12, color: '#000', lineHeight: 1.8 }}>
+              <div><strong style={{ color: '#000' }}>CIUDAD:</strong> QUITO</div>
+              <div><strong style={{ color: '#000' }}>CI O RUC:</strong> 2100282249001</div>
+              <div><strong style={{ color: '#000' }}>TLF:</strong> 0958737004</div>
+              <div><strong style={{ color: '#000' }}>EMAIL:</strong> ventas@surtimax.com</div>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <h1 style={{ color: '#0D47A1', fontSize: 30, fontWeight: 800, margin: '0 0 14px', letterSpacing: 2 }}>PREFACTURA</h1>
-            <div style={{ fontSize: 13, color: '#546E7A', lineHeight: 1.8 }}>
+            <h1 style={{ color: '#000', fontSize: 30, fontWeight: 800, margin: '0 0 14px', letterSpacing: 2 }}>PREFACTURA</h1>
+            <div style={{ fontSize: 13, color: '#000', lineHeight: 1.8 }}>
               <div><strong>No. Prefactura:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
               <div><strong>Fecha:</strong> {new Date(quote.date).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
             </div>
@@ -219,8 +152,8 @@ export function QuotationDetail() {
         </div>
 
         {/* Client info */}
-        <div style={{ padding: '18px 32px', backgroundColor: '#F8FAFE', borderBottom: '1px solid #E3F2FD' }}>
-          <h3 style={{ margin: '0 0 12px', color: '#0D47A1', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 6, display: 'inline-block' }}>
+        <div style={{ padding: '18px 32px', backgroundColor: '#fff', borderBottom: '2px solid #000' }}>
+          <h3 style={{ margin: '0 0 12px', color: '#000', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 6, display: 'inline-block' }}>
             Información del cliente:
           </h3>
           {currentUser?.isAdmin && (
@@ -260,7 +193,7 @@ export function QuotationDetail() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 20 }}>
               <thead>
-                <tr style={{ backgroundColor: '#0D47A1', color: 'white' }}>
+                <tr style={{ backgroundColor: '#fff', color: '#000', borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
                   <th style={th}>CÓDIGO</th>
                   <th style={th}>CANTIDAD</th>
                   <th style={{ ...th, textAlign: 'left', paddingLeft: 16 }}>DESCRIPCIÓN DEL ÍTEM</th>
@@ -270,12 +203,12 @@ export function QuotationDetail() {
               </thead>
               <tbody>
                 {quote.items.map((item, i) => (
-                  <tr key={i} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#F8FAFE', borderBottom: '1px solid #E3F2FD' }}>
+                  <tr key={i} style={{ backgroundColor: 'white', borderBottom: '1px solid #000' }}>
                     <td style={tdC}><span style={{ backgroundColor: '#E3F2FD', color: '#1565C0', borderRadius: 4, padding: '1px 7px', fontSize: 11, fontWeight: 600 }}>{item.code}</span></td>
                     <td style={tdC}>{item.quantity}</td>
                     <td style={{ ...tdC, textAlign: 'left', paddingLeft: 16, fontWeight: 500, color: '#1A237E' }}>{item.description}</td>
                     <td style={tdC}>${item.unitPrice.toFixed(2)}</td>
-                    <td style={{ ...tdC, fontWeight: 700, color: '#0D47A1' }}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                    <td style={{ ...tdC, fontWeight: 700, color: '#000' }}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -284,10 +217,10 @@ export function QuotationDetail() {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '20px 32px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '1px solid #E3F2FD', flexWrap: 'wrap', gap: 24 }}>
+        <div style={{ padding: '20px 32px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '2px solid #000', flexWrap: 'wrap', gap: 24 }}>
           <div style={{ maxWidth: 420 }}>
-            <h4 style={{ color: '#0D47A1', margin: '0 0 10px', fontWeight: 700, fontSize: 13 }}>VALIDEZ Y CONDICIONES COMERCIALES:</h4>
-            <p style={{ color: '#546E7A', margin: 0, fontSize: 12 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
+            <h4 style={{ color: '#000', margin: '0 0 10px', fontWeight: 700, fontSize: 13 }}>VALIDEZ Y CONDICIONES COMERCIALES:</h4>
+            <p style={{ color: '#000', margin: 0, fontSize: 12 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
           </div>
 
           <div style={{ minWidth: 280, width: 300 }}>
@@ -314,7 +247,7 @@ export function QuotationDetail() {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => setEditingDiscount(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0D47A1', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, fontSize: 13, padding: 0 }}>
+                    <button onClick={() => setEditingDiscount(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#000', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, fontSize: 13, padding: 0 }}>
                       ${discount.toFixed(2)} <Edit2 size={12} style={{ color: '#1976D2' }} />
                     </button>
                   )
@@ -328,7 +261,7 @@ export function QuotationDetail() {
 
         {/* Signature */}
         <div style={{ padding: '10px 32px 36px', textAlign: 'center' }}>
-          <div style={{ display: 'inline-block', borderTop: '2px solid #0D47A1', paddingTop: 10, minWidth: 220, color: '#546E7A', fontSize: 13, letterSpacing: 1 }}>
+          <div style={{ display: 'inline-block', borderTop: '2px solid #0D47A1', paddingTop: 10, minWidth: 220, color: '#000', fontSize: 13, letterSpacing: 1 }}>
             RECIBÍ CONFORME
           </div>
         </div>
@@ -344,7 +277,8 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { margin: 10mm; }
+          @page { size: A4; margin: 12mm; }
+          #quotation-document { border: 1px solid #000 !important; max-width: 100% !important; margin: 0 auto !important; }
         }
       `}</style>
     </div>
@@ -385,7 +319,7 @@ function TotalRow({ label, value, highlight }: { label: string; value: any; high
   );
 }
 
-const miniEditBtn: React.CSSProperties = { background: '#E3F2FD', border: '1px solid #BBDEFB', color: '#0D47A1', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
+const miniEditBtn: React.CSSProperties = { background: '#E3F2FD', border: '1px solid #BBDEFB', color: '#000', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 const miniSaveBtn: React.CSSProperties = { background: '#388E3C', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 const miniCancelBtn: React.CSSProperties = { background: '#EF5350', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 
