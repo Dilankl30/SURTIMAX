@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Printer, ArrowLeft, MessageCircle, Edit2, Save, X } from 'lucide-react';
 import { useStore } from '../store';
 import type { QuotationClientData } from '../store';
-import { createQuotationPdfBlobFromElement } from '../utils/quotationPdf';
+import { createQuotationPdfBlobFromElement, createQuotationPdfBlob } from '../utils/quotationPdf';
 import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
 
 export function QuotationDetail() {
@@ -91,19 +91,31 @@ export function QuotationDetail() {
     URL.revokeObjectURL(url);
   };
 
+
+  const generatePdfBlob = async (documentElement: HTMLElement): Promise<{ blob: Blob; fallbackUsed: boolean }> => {
+    try {
+      const visualBlob = await createQuotationPdfBlobFromElement(documentElement);
+      return { blob: visualBlob, fallbackUsed: false };
+    } catch {
+      const fallbackBlob = createQuotationPdfBlob({
+        ...quote,
+        discount,
+        finalTotal,
+      });
+      return { blob: fallbackBlob, fallbackUsed: true };
+    }
+  };
+
   const handleSendClientWhatsApp = async () => {
     const documentElement = document.getElementById('quotation-document');
     if (!documentElement) {
       alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
       return;
     }
-    let pdfBlob: Blob;
+    const { blob: pdfBlob, fallbackUsed } = await generatePdfBlob(documentElement);
 
-    try {
-      pdfBlob = await createQuotationPdfBlobFromElement(documentElement);
-    } catch {
-      alert('No se pudo generar el PDF visual de la prefactura en este dispositivo. Intenta desde otro navegador o desde escritorio.');
-      return;
+    if (fallbackUsed) {
+      alert('Tu dispositivo no permitió generar el PDF visual. Se descargará una versión compatible con el mismo contenido.');
     }
 
     const fileName = `${quote.number}.pdf`;
@@ -131,13 +143,9 @@ export function QuotationDetail() {
       alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
       return;
     }
-    let pdfBlob: Blob;
-
-    try {
-      pdfBlob = await createQuotationPdfBlobFromElement(documentElement);
-    } catch {
-      alert('No se pudo generar el PDF visual de la prefactura en este dispositivo. Intenta desde otro navegador o desde escritorio.');
-      return;
+    const { blob: pdfBlob, fallbackUsed } = await generatePdfBlob(documentElement);
+    if (fallbackUsed) {
+      alert('Tu dispositivo no permitió generar el PDF visual. Se descargará una versión compatible con el mismo contenido.');
     }
 
     downloadPdf(pdfBlob, `${quote.number}.pdf`);
