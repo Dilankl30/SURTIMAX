@@ -129,10 +129,10 @@ export function QuotationDetail() {
       <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 820, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif' }}>
 
         {/* Header */}
-        <div style={{ padding: '24px 32px', borderBottom: '2px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+        <div style={{ padding: '16px 18px', borderBottom: '2px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 110, objectFit: 'contain', marginBottom: 10 }} />
-            <div style={{ fontSize: 12, color: '#000', lineHeight: 1.8 }}>
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 58, objectFit: 'contain', marginBottom: 6 }} />
+            <div style={{ fontSize: 10, color: '#000', lineHeight: 1.5 }}>
               <div><strong style={{ color: '#000' }}>CIUDAD:</strong> QUITO</div>
               <div><strong style={{ color: '#000' }}>CI O RUC:</strong> 2100282249001</div>
               <div><strong style={{ color: '#000' }}>TLF:</strong> 0958737004</div>
@@ -140,8 +140,8 @@ export function QuotationDetail() {
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <h1 style={{ color: '#000', fontSize: 30, fontWeight: 800, margin: '0 0 14px', letterSpacing: 2 }}>PREFACTURA</h1>
-            <div style={{ fontSize: 13, color: '#000', lineHeight: 1.8 }}>
+            <h1 style={{ color: '#000', fontSize: 24, fontWeight: 800, margin: '0 0 8px', letterSpacing: 1 }}>PREFACTURA</h1>
+            <div style={{ fontSize: 11, color: '#000', lineHeight: 1.5 }}>
               <div><strong>No. Prefactura:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
               <div><strong>Fecha:</strong> {new Date(emissionDate).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
             </div>
@@ -154,8 +154,8 @@ export function QuotationDetail() {
         </div>
 
         {/* Client info */}
-        <div style={{ padding: '18px 32px', backgroundColor: '#fff', borderBottom: '2px solid #000' }}>
-          <h3 style={{ margin: '0 0 12px', color: '#000', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 6, display: 'inline-block' }}>
+        <div style={{ padding: '10px 18px', backgroundColor: '#fff', borderBottom: '2px solid #000' }}>
+          <h3 style={{ margin: '0 0 8px', color: '#000', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 3, display: 'inline-block' }}>
             Información del cliente:
           </h3>
           {currentUser?.isAdmin && (
@@ -180,7 +180,7 @@ export function QuotationDetail() {
               {clientEditError && <div style={{ gridColumn: '1 / -1', color: '#C62828', backgroundColor: '#FFEBEE', border: '1px solid #FFCDD2', borderRadius: 8, padding: '8px 10px', fontSize: 12 }}>⚠️ {clientEditError}</div>}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px 24px', fontSize: 13 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px 14px', fontSize: 11 }}>
               <ClientRow label="Nombre / Razón Social" value={quote.clientName} />
               <ClientRow label="Teléfono" value={quote.clientPhone} />
               <ClientRow label="R.U.C. / C.I." value={quote.clientCedula} />
@@ -191,9 +191,9 @@ export function QuotationDetail() {
         </div>
 
         {/* Items table */}
-        <div style={{ padding: '0 32px 24px' }}>
+        <div style={{ padding: '0 18px 10px' }}>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 20 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10 }}>
               <thead>
                 <tr style={{ backgroundColor: '#fff', color: '#000', borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
                   <th style={th}>CÓDIGO</th>
@@ -219,10 +219,10 @@ export function QuotationDetail() {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '20px 32px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '2px solid #000', flexWrap: 'wrap', gap: 24 }}>
-          <div style={{ maxWidth: 420 }}>
-            <h4 style={{ color: '#000', margin: '0 0 10px', fontWeight: 700, fontSize: 13 }}>VALIDEZ Y CONDICIONES COMERCIALES:</h4>
-            <p style={{ color: '#000', margin: 0, fontSize: 12 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
+        <div style={{ padding: '10px 18px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '2px solid #000', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ maxWidth: 280 }}>
+            <h4 style={{ color: '#000', margin: '0 0 4px', fontWeight: 700, fontSize: 10 }}>VALIDEZ Y CONDICIONES COMERCIALES:</h4>
+            <p style={{ color: '#000', margin: 0, fontSize: 9 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
           </div>
 
           <div style={{ minWidth: 280, width: 300 }}>
@@ -265,8 +265,8 @@ export function QuotationDetail() {
         </div>
 
         {/* Signature */}
-        <div style={{ padding: '10px 32px 36px', textAlign: 'center' }}>
-          <div style={{ display: 'inline-block', borderTop: '2px solid #0D47A1', paddingTop: 10, minWidth: 220, color: '#000', fontSize: 13, letterSpacing: 1 }}>
+        <div style={{ padding: '4px 18px 12px', textAlign: 'center' }}>
+          <div style={{ display: 'inline-block', borderTop: '2px solid #0D47A1', paddingTop: 8, minWidth: 150, color: '#000', fontSize: 11, letterSpacing: 0.8 }}>
             RECIBÍ CONFORME
           </div>
         </div>
@@ -277,7 +277,7 @@ export function QuotationDetail() {
         @media print {
           body * { visibility: hidden !important; }
           .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
-          .quotation-print-root { position: absolute; left: 0; top: 0; width: 100%; }
+          .quotation-print-root { position: absolute; left: 8mm; top: 8mm; width: calc(100% - 16mm); display: grid; grid-template-columns: 1fr 1fr; column-gap: 8mm; align-content: start; }
           .no-print { display: none !important; }
           .only-print { display: inline !important; }
           body { background: white !important; }
@@ -287,8 +287,8 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: A4; margin: 12mm; }
-          #quotation-document { border: 1px solid #000 !important; max-width: 100% !important; margin: 0 auto !important; }
+          @page { size: A4 landscape; margin: 8mm; }
+          #quotation-document { border: 1px solid #000 !important; width: calc((297mm - 16mm - 8mm) / 2) !important; max-width: none !important; margin: 0 !important; break-inside: avoid; page-break-inside: avoid; }
         }
       `}</style>
     </div>
@@ -333,5 +333,5 @@ const miniEditBtn: React.CSSProperties = { background: '#E3F2FD', border: '1px s
 const miniSaveBtn: React.CSSProperties = { background: '#388E3C', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 const miniCancelBtn: React.CSSProperties = { background: '#EF5350', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 
-const th: React.CSSProperties = { padding: '11px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, letterSpacing: 0.5 };
-const tdC: React.CSSProperties = { padding: '10px 12px', textAlign: 'center', fontSize: 13 };
+const th: React.CSSProperties = { padding: '6px 7px', textAlign: 'center', fontSize: 10, fontWeight: 700, letterSpacing: 0.3 };
+const tdC: React.CSSProperties = { padding: '5px 7px', textAlign: 'center', fontSize: 10 };
