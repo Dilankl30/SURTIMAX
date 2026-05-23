@@ -140,7 +140,7 @@ export function QuotationDetail() {
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <h1 style={{ color: '#000', fontSize: 24, fontWeight: 800, margin: '0 0 8px', letterSpacing: 1 }}>PREFACTURA</h1>
+            <h1 style={{ color: '#000', fontSize: 24, fontWeight: 800, margin: '0 0 8px', letterSpacing: 1 }}>PRE-FACTURA</h1>
             <div style={{ fontSize: 11, color: '#000', lineHeight: 1.5 }}>
               <div><strong>No. Prefactura:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
               <div><strong>Fecha:</strong> {new Date(emissionDate).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
@@ -225,7 +225,7 @@ export function QuotationDetail() {
             <p style={{ color: '#000', margin: 0, fontSize: 9 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
           </div>
 
-          <div style={{ minWidth: 280, width: 300 }}>
+          <div style={{ minWidth: 280, width: 300, marginLeft: 'auto' }}>
             <TotalRow label="SUBTOTAL:" value={`$${subtotal.toFixed(2)}`} />
             <TotalRow label="I.V.A. 15%:" value={`$${iva.toFixed(2)}`} />
             <TotalRow
@@ -265,7 +265,7 @@ export function QuotationDetail() {
         </div>
 
         {/* Signature */}
-        <div className="print-keep" style={{ padding: '4px 18px 12px', textAlign: 'center' }}>
+        <div className="print-keep signature-block" style={{ padding: '4px 18px 12px', textAlign: 'center' }}>
           <div style={{ display: 'inline-block', borderTop: '2px solid #0D47A1', paddingTop: 8, minWidth: 150, color: '#000', fontSize: 11, letterSpacing: 0.8 }}>
             RECIBÍ CONFORME
           </div>
@@ -297,6 +297,16 @@ export function QuotationDetail() {
             column-count: 2;
             column-gap: 8mm;
             column-fill: auto;
+            position: relative;
+          }
+          #quotation-document::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: calc(50% - 4mm);
+            width: 1px;
+            background: #000;
           }
           #quotation-document > div {
             break-inside: auto;
@@ -311,6 +321,9 @@ export function QuotationDetail() {
           #quotation-document .print-keep {
             break-inside: avoid-column;
             page-break-inside: avoid;
+          }
+          #quotation-document .signature-block {
+            margin-top: auto;
           }
         }
       `}</style>
@@ -345,9 +358,9 @@ function ClientEditField({ label, value, onChange, type = 'text' }: { label: str
 
 function TotalRow({ label, value, highlight }: { label: string; value: any; highlight?: boolean }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', columnGap: 14, alignItems: 'center', padding: highlight ? '10px 12px' : '7px 12px', backgroundColor: highlight ? '#0D47A1' : 'transparent', borderRadius: highlight ? 8 : 0, marginBottom: highlight ? 0 : 2 }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: highlight ? 'white' : '#546E7A', textAlign: 'left' }}>{label}</span>
-      <span style={{ fontSize: highlight ? 17 : 13, fontWeight: 800, color: highlight ? 'white' : '#0D47A1', minWidth: 110, textAlign: 'right', justifySelf: 'end' }}>{value}</span>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', columnGap: 14, alignItems: 'center', padding: highlight ? '10px 12px' : '7px 12px', backgroundColor: highlight ? '#0D47A1' : 'transparent', borderRadius: highlight ? 8 : 0, marginBottom: highlight ? 0 : 2 }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: highlight ? 'white' : '#000', textAlign: 'left' }}>{label}</span>
+      <span style={{ fontSize: highlight ? 24 : 22, fontWeight: 800, color: highlight ? 'white' : '#000', minWidth: 120, textAlign: 'right', justifySelf: 'end', fontFamily: 'Arial, Helvetica, sans-serif' }}>{value}</span>
     </div>
   );
 }
