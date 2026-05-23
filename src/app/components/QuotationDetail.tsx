@@ -129,7 +129,7 @@ export function QuotationDetail() {
       <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 820, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif' }}>
 
         {/* Header */}
-        <div style={{ padding: '16px 18px', borderBottom: '2px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+        <div className="print-keep" style={{ padding: '16px 18px', borderBottom: '2px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
           <div>
             <img src={logoImg} alt="SURTIMAX" style={{ height: 58, objectFit: 'contain', marginBottom: 6 }} />
             <div style={{ fontSize: 10, color: '#000', lineHeight: 1.5 }}>
@@ -154,7 +154,7 @@ export function QuotationDetail() {
         </div>
 
         {/* Client info */}
-        <div style={{ padding: '10px 18px', backgroundColor: '#fff', borderBottom: '2px solid #000' }}>
+        <div className="print-keep" style={{ padding: '10px 18px', backgroundColor: '#fff', borderBottom: '2px solid #000' }}>
           <h3 style={{ margin: '0 0 8px', color: '#000', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 3, display: 'inline-block' }}>
             Información del cliente:
           </h3>
@@ -219,7 +219,7 @@ export function QuotationDetail() {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '10px 18px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '2px solid #000', flexWrap: 'wrap', gap: 12 }}>
+        <div className="print-keep" style={{ padding: '10px 18px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '2px solid #000', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ maxWidth: 280 }}>
             <h4 style={{ color: '#000', margin: '0 0 4px', fontWeight: 700, fontSize: 10 }}>VALIDEZ Y CONDICIONES COMERCIALES:</h4>
             <p style={{ color: '#000', margin: 0, fontSize: 9 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
@@ -265,7 +265,7 @@ export function QuotationDetail() {
         </div>
 
         {/* Signature */}
-        <div style={{ padding: '4px 18px 12px', textAlign: 'center' }}>
+        <div className="print-keep" style={{ padding: '4px 18px 12px', textAlign: 'center' }}>
           <div style={{ display: 'inline-block', borderTop: '2px solid #0D47A1', paddingTop: 8, minWidth: 150, color: '#000', fontSize: 11, letterSpacing: 0.8 }}>
             RECIBÍ CONFORME
           </div>
@@ -299,6 +299,16 @@ export function QuotationDetail() {
             column-fill: auto;
           }
           #quotation-document > div {
+            break-inside: auto;
+            page-break-inside: auto;
+          }
+          #quotation-document table,
+          #quotation-document tbody,
+          #quotation-document tr {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+          #quotation-document .print-keep {
             break-inside: avoid-column;
             page-break-inside: avoid;
           }
