@@ -323,7 +323,13 @@ export function QuotationDetail() {
             page-break-inside: avoid;
           }
           #quotation-document .signature-block {
-            margin-top: auto;
+            position: absolute;
+            bottom: 6mm;
+            left: calc(50% + 4mm);
+            width: calc(50% - 8mm);
+            text-align: center;
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
         }
       `}</style>
@@ -359,8 +365,8 @@ function ClientEditField({ label, value, onChange, type = 'text' }: { label: str
 function TotalRow({ label, value, highlight }: { label: string; value: any; highlight?: boolean }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', columnGap: 14, alignItems: 'center', padding: highlight ? '10px 12px' : '7px 12px', backgroundColor: highlight ? '#0D47A1' : 'transparent', borderRadius: highlight ? 8 : 0, marginBottom: highlight ? 0 : 2 }}>
-      <span style={{ fontSize: 13, fontWeight: 700, color: highlight ? 'white' : '#000', textAlign: 'left' }}>{label}</span>
-      <span style={{ fontSize: highlight ? 24 : 22, fontWeight: 800, color: highlight ? 'white' : '#000', minWidth: 120, textAlign: 'right', justifySelf: 'end', fontFamily: 'Arial, Helvetica, sans-serif' }}>{value}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: highlight ? 'white' : '#000', textAlign: 'left' }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: highlight ? 'white' : '#000', minWidth: 120, textAlign: 'right', justifySelf: 'end', fontFamily: 'Arial, Helvetica, sans-serif' }}>{value}</span>
     </div>
   );
 }
