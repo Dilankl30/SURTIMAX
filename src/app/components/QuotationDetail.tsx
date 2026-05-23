@@ -277,7 +277,7 @@ export function QuotationDetail() {
         @media print {
           body * { visibility: hidden !important; }
           .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
-          .quotation-print-root { position: absolute; left: 8mm; top: 8mm; width: calc(100% - 16mm); display: grid; grid-template-columns: 1fr 1fr; column-gap: 8mm; align-content: start; }
+          .quotation-print-root { position: absolute; left: 8mm; top: 8mm; width: calc(100% - 16mm); }
           .no-print { display: none !important; }
           .only-print { display: inline !important; }
           body { background: white !important; }
@@ -288,7 +288,20 @@ export function QuotationDetail() {
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
           @page { size: A4 landscape; margin: 8mm; }
-          #quotation-document { border: 1px solid #000 !important; width: calc((297mm - 16mm - 8mm) / 2) !important; max-width: none !important; margin: 0 !important; break-inside: avoid; page-break-inside: avoid; }
+          #quotation-document {
+            border: 1px solid #000 !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            height: calc(210mm - 16mm) !important;
+            column-count: 2;
+            column-gap: 8mm;
+            column-fill: auto;
+          }
+          #quotation-document > div {
+            break-inside: avoid-column;
+            page-break-inside: avoid;
+          }
         }
       `}</style>
     </div>
