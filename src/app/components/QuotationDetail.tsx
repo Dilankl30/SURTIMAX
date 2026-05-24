@@ -262,6 +262,7 @@ export function QuotationDetail() {
             --print-scale: 1;
             --print-top-padding: 0px;
             --print-page-margin: 0mm;
+            --print-translate-y: 0mm;
           }
 
           @page { margin: var(--print-page-margin); }
@@ -302,7 +303,7 @@ export function QuotationDetail() {
             position: relative;
             padding: var(--print-top-padding) 16px 16px 16px !important;
             font-size: inherit !important;
-            transform: scale(var(--print-scale)) !important;
+            transform: translateY(var(--print-translate-y)) scale(var(--print-scale)) !important;
             transform-origin: top left !important;
           }
 
@@ -329,7 +330,8 @@ export function QuotationDetail() {
 
           @media print and (max-width: 148mm) {
             :root {
-              --print-scale: 0.707;
+              --print-scale: 0.695;
+              --print-translate-y: -2mm;
             }
           }
 
