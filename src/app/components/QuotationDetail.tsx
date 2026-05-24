@@ -132,22 +132,19 @@ export function QuotationDetail() {
       <div className="quotation-print-root format-a5-print">
       <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 980, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 16 }}>
 
-        <div className="print-keep" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, alignItems: 'start' }}>
+        <div className="print-keep invoice-section" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, alignItems: 'start' }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 74, objectFit: 'contain', marginBottom: 8 }} />
-            <div style={{ display: 'flex', gap: 26, fontSize: 16, marginLeft: 10, marginTop: 2 }}>
-              <span>AMBIENTE</span><span>PRODUCCIÓN</span>
-            </div>
-            <div style={{ marginTop: 16, marginLeft: 8, fontSize: 18, fontWeight: 700 }}><strong>No. Prefactura:</strong> {generatedPrefacturaNumber}</div>
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 140, objectFit: 'contain', marginBottom: 4 }} />
+            <div style={{ marginTop: 8, marginLeft: 8, fontSize: 18, fontWeight: 700 }}><strong>No. Prefactura:</strong> {generatedPrefacturaNumber}</div>
           </div>
 
           <div>
             <h1 style={{ margin: 0, fontSize: 20, letterSpacing: 0.2, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
             <div style={{ fontSize: 14, lineHeight: 1.35, marginTop: 8 }}>
-              <div>RUC: 210020260001</div>
-              <div>Dirección: QUITO</div>
-              <div>Teléfono: 0980320848</div>
-              <div>Email: GQ_SurtiMax@outlook.com</div>
+              <div><span style={{ color: '#C62828', marginRight: 8 }}>👤</span>RUC: 210020260001</div>
+              <div><span style={{ color: '#C62828', marginRight: 8 }}>📍</span>Dirección: QUITO</div>
+              <div><span style={{ color: '#C62828', marginRight: 8 }}>📞</span>Teléfono: 0980320848</div>
+              <div><span style={{ color: '#C62828', marginRight: 8 }}>✉</span>Email: GQ_SurtiMax@outlook.com</div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 24, alignItems: 'start' }}>
@@ -161,7 +158,7 @@ export function QuotationDetail() {
           </div>
         </div>
 
-        <div className="print-keep no-print-client" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
+        <div className="print-keep invoice-section" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <strong style={{ fontSize: 14, letterSpacing: 1 }}>INFORMACIÓN DEL CLIENTE:</strong>
             {editingClient ? (
@@ -197,7 +194,7 @@ export function QuotationDetail() {
         </div>
 
 
-        <div style={{ marginTop: 14 }}>
+        <div className="invoice-table" style={{ marginTop: 14 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
               <tr>
@@ -229,7 +226,7 @@ export function QuotationDetail() {
           </table>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 300px', gap: 10 }}>
+        <div className="print-keep totals-section" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 300px', gap: 10 }}>
           <div style={{ border: '1px solid #000', minHeight: 94, padding: '8px 10px', fontSize: 11 }}>OBSERVACION:</div>
           <div style={{ border: '1px solid #000', padding: '8px 10px', fontSize: 12 }}>
             <div style={sumRow}><span>SUBTOTAL</span><span>{subtotal.toFixed(2).replace('.', ',')}</span></div>
@@ -245,7 +242,7 @@ export function QuotationDetail() {
           Debo y pagaré al vencimiento incondicionalmente en esta ciudad o en el lugar que se me reconvenga a la orden de DISTRIBUIDORA Y COMERCIALIZADORA SURTIMAX SA la suma de dinero indicada en el "VALOR TOTAL" de este documento. En caso de mora pagaré la tasa de interés máxima vigente a la fecha de vencimiento.
         </div>
 
-        <div className="print-keep" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, fontSize: 11, textAlign: 'center' }}>
+        <div className="print-keep signature-section" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, fontSize: 11, textAlign: 'center' }}>
           <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma autorizada</div></div>
           <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma cliente</div></div>
         </div>
@@ -258,47 +255,65 @@ export function QuotationDetail() {
 
       <style>{`
         @media print {
+          :root {
+            --print-scale: 1;
+            --print-top-padding: 0px;
+            --print-page-margin: 0mm;
+            --print-translate-y: 0mm;
+          }
+
+          @page { margin: var(--print-page-margin); }
+
           body * { visibility: hidden !important; }
           .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
-          .quotation-print-root { position: absolute; left: 10mm; top: 10mm; width: calc(100% - 20mm); }
+          .quotation-print-root { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
           .no-print { display: none !important; }
           .only-print { display: inline !important; }
-          .no-print-client { display: none !important; }
-          body { background: white !important; }
+          html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
+
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
+
+          .invoice-section,
+          .totals-section,
+          .signature-section {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          .invoice-table {
+            break-inside: auto;
+            page-break-inside: auto;
+          }
+
           #quotation-document { box-shadow: none !important; border: none !important; border-radius: 0 !important; background: #fff !important; }
           #quotation-document [style*="background"],
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: A4 portrait; margin: 10mm; }
-          .quotation-print-root { position: static !important; width: auto !important; }
+
           #quotation-document {
             border: none !important;
-            width: 100% !important;
+            width: calc(100% / var(--print-scale)) !important;
             max-width: 100% !important;
-            margin: 0 auto !important;
+            margin: 0 !important;
             height: auto !important;
             position: relative;
-            padding: 8px !important;
-            font-size: 90% !important;
+            padding: var(--print-top-padding) 16px 16px 16px !important;
+            font-size: inherit !important;
+            transform: translateY(var(--print-translate-y)) scale(var(--print-scale)) !important;
+            transform-origin: top left !important;
           }
-          #quotation-document > div {
-            break-inside: avoid;
-            page-break-inside: avoid;
+
+          #quotation-document table {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
           }
-          #quotation-document table,
-          #quotation-document tbody,
-          #quotation-document tr,
-          #quotation-document td,
-          #quotation-document th {
+          #quotation-document tr {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
-          #quotation-document .filler-row td { height: 120px !important; }
-          #quotation-document .print-keep {
-            break-inside: avoid;
-            page-break-inside: avoid;
+          #quotation-document .filler-row {
+            display: none !important;
           }
           #quotation-document .signature-block {
             position: absolute;
@@ -310,14 +325,13 @@ export function QuotationDetail() {
             page-break-inside: avoid;
           }
 
-          
           @media print and (max-width: 148mm) {
-            #quotation-document {
-              padding: 4mm !important;
-              font-size: 78% !important;
+            :root {
+              --print-scale: 0.76;
+              --print-translate-y: -1mm;
             }
-            #quotation-document .filler-row td { height: 40px !important; }
           }
+
           .status-badge {
             display: none !important;
           }
