@@ -223,7 +223,6 @@ export function QuotationDetail() {
         </div>
       </div>
       </div>
-      </div>
 
       <style>{`
         @media print {
