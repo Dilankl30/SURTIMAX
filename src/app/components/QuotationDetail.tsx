@@ -73,7 +73,7 @@ export function QuotationDetail() {
 
   const clientWANum = normalizeWhatsAppNumber(quote.clientPhone);
   const clientWAMsg = encodeURIComponent(
-    `Hola ${quote.clientName}, su prefactura *${quote.number}* por un total de *$${finalTotal.toFixed(2)}* está lista.\n\nProductos:\n` +
+    `Hola ${quote.clientName}, su prefactura *${quote.number}* por un total de *${finalTotal.toFixed(2).replace('.', ',')}* está lista.\n\nProductos:\n` +
     quote.items.map(i => `• ${i.description} x${i.quantity} = $${(i.quantity * i.unitPrice).toFixed(2)}`).join('\n') +
     `\n\n_SURTIMAX - variedad y buen precio_`
   );
@@ -126,36 +126,36 @@ export function QuotationDetail() {
 
       {/* Document */}
       <div className="quotation-print-root">
-      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 1040, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 14 }}>
+      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 760, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 14 }}>
 
-        <div className="print-keep" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 14, alignItems: 'start' }}>
+        <div className="print-keep" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 12, alignItems: 'start' }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 94, objectFit: 'contain', marginBottom: 10 }} />
-            <div style={{ display: 'flex', gap: 26, fontSize: 34, marginLeft: 16, marginTop: 4 }}>
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 52, objectFit: 'contain', marginBottom: 8 }} />
+            <div style={{ display: 'flex', gap: 16, fontSize: 15, marginLeft: 6, marginTop: 2 }}>
               <span>AMBIENTE</span><span>PRODUCCIÓN</span>
             </div>
-            <div style={{ marginTop: 46, marginLeft: 20, fontSize: 40 }}><strong>No. Prefactura:</strong></div>
+            <div style={{ marginTop: 32, marginLeft: 12, fontSize: 38 }}><strong>No. Prefactura:</strong></div>
           </div>
 
           <div>
-            <h1 style={{ margin: 0, fontSize: 56, letterSpacing: 1, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
-            <div style={{ fontSize: 44, lineHeight: 1.4, marginTop: 8 }}>
+            <h1 style={{ margin: 0, fontSize: 27, letterSpacing: 0.2, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
+            <div style={{ fontSize: 19, lineHeight: 1.35, marginTop: 8 }}>
               <div>RUC: 210020260001</div>
               <div>Dirección: QUITO</div>
               <div>Teléfono: 0980320848</div>
               <div>Email: GQ_SurtiMax@outlook.com</div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 38, alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 24, alignItems: 'start' }}>
               <div />
-              <div style={{ fontSize: 42, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 17, lineHeight: 1.4 }}>
                 <div style={{ fontWeight: 700 }}>REGIMEN GENERAL:</div>
                 <div>Código Cliente:&nbsp; C01302868-005</div>
                 <div>Fecha Emisión:&nbsp; {new Date(emissionDate).toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', columnGap: 20, rowGap: 6, fontSize: 42, marginTop: 22 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', columnGap: 10, rowGap: 4, fontSize: 18, marginTop: 12 }}>
               <div>Establecimiento:</div><div>SURTIMAX</div>
               <div>RUC / C.I.:</div><div>210020260001</div>
               <div>Dirección:</div><div>QUITO</div>
@@ -165,8 +165,43 @@ export function QuotationDetail() {
           </div>
         </div>
 
-        <div style={{ marginTop: 14 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 34 }}>
+        <div className="print-keep" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '8px 10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <strong style={{ fontSize: 13, letterSpacing: 1 }}>INFORMACIÓN DEL CLIENTE:</strong>
+            {editingClient ? (
+              <div className="no-print" style={{ display: 'flex', gap: 8 }}>
+                <button onClick={handleSaveClient} style={miniSaveBtn}><Save size={13} /> Guardar</button>
+                <button onClick={() => { setEditingClient(false); setClientEditError(''); }} style={miniCancelBtn}><X size={13} /> Cancelar</button>
+              </div>
+            ) : (
+              <button className="no-print" onClick={() => setEditingClient(true)} style={miniEditBtn}><Edit2 size={13} /> Editar datos del cliente</button>
+            )}
+          </div>
+
+          {editingClient ? (
+            <div className="no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <ClientEditField label="Nombre / Razón Social" value={clientDraft.clientName} onChange={v => handleClientDraftChange('clientName', v)} />
+              <ClientEditField label="Teléfono" value={clientDraft.clientPhone} onChange={v => handleClientDraftChange('clientPhone', v)} />
+              <ClientEditField label="RUC / C.I." value={clientDraft.clientCedula} onChange={v => handleClientDraftChange('clientCedula', v)} />
+              <ClientEditField label="Dirección" value={clientDraft.clientAddress} onChange={v => handleClientDraftChange('clientAddress', v)} />
+              <div style={{ gridColumn: '1 / -1' }}>
+                <ClientEditField label="Correo" value={clientDraft.clientEmail ?? ''} onChange={v => handleClientDraftChange('clientEmail', v)} type="email" />
+              </div>
+              {clientEditError ? <div style={{ gridColumn: '1 / -1', color: '#B71C1C', fontSize: 12 }}>{clientEditError}</div> : null}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <ClientRow label="Nombre / Razón Social" value={quote.clientName} />
+              <ClientRow label="Teléfono" value={quote.clientPhone} />
+              <ClientRow label="RUC / C.I." value={quote.clientCedula} />
+              <ClientRow label="Dirección" value={quote.clientAddress} />
+              <div style={{ gridColumn: '1 / -1' }}><ClientRow label="Correo" value={quote.clientEmail || '-'} /></div>
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginTop: 10 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr>
                 <th style={bigTh}>Código</th>
@@ -185,43 +220,42 @@ export function QuotationDetail() {
                   <td style={bigTd}>{item.code}</td>
                   <td style={{ ...bigTd, textAlign: 'left' }}>{item.description}</td>
                   <td style={bigTd}>{item.quantity}</td>
-                  <td style={bigTd}>${item.unitPrice.toFixed(2)}</td>
+                  <td style={bigTd}>{item.unitPrice.toFixed(2).replace('.', ',')}</td>
                   <td style={bigTd}>{discount > 0 ? `${((discount / totalCotizado) * 100).toFixed(2)}%` : '0,00%'}</td>
                   <td style={bigTd}>15%</td>
-                  <td style={bigTd}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
-                  <td style={bigTd}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                  <td style={bigTd}>{(item.quantity * item.unitPrice).toFixed(2).replace('.', ',')}</td>
+                  <td style={bigTd}>{(item.quantity * item.unitPrice).toFixed(2).replace('.', ',')}</td>
                 </tr>
               ))}
-              <tr><td colSpan={8} style={{ ...bigTd, height: 440, borderTop: 'none' }} /></tr>
+              <tr className="filler-row"><td colSpan={8} style={{ ...bigTd, height: 310, borderTop: 'none' }} /></tr>
             </tbody>
           </table>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 380px', gap: 10 }}>
-          <div style={{ border: '1px solid #000', minHeight: 90, padding: '8px 10px', fontSize: 36 }}>OBSERVACION:</div>
-          <div style={{ border: '1px solid #000', padding: '10px 14px', fontSize: 40 }}>
-            <div style={sumRow}><span>SUBTOTAL</span><span>${subtotal.toFixed(2)}</span></div>
-            <div style={sumRow}><span>DESCUENTO</span><span>${discount.toFixed(2)}</span></div>
-            <div style={sumRow}><span>SUBTOTAL 2</span><span>${(subtotal - discount).toFixed(2)}</span></div>
-            <div style={sumRow}><span>BASE IVA 15%</span><span>${(subtotal - discount).toFixed(2)}</span></div>
-            <div style={sumRow}><span>IVA 15%</span><span>${iva.toFixed(2)}</span></div>
-            <div style={{ ...sumRow, fontWeight: 700 }}><span>TOTAL</span><span>${finalTotal.toFixed(2)}</span></div>
+        <div className="print-keep" style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 280px', gap: 10 }}>
+          <div style={{ border: '1px solid #000', minHeight: 74, padding: '6px 8px', fontSize: 16 }}>OBSERVACION:</div>
+          <div style={{ border: '1px solid #000', padding: '8px 10px', fontSize: 16 }}>
+            <div style={sumRow}><span>SUBTOTAL</span><span>{subtotal.toFixed(2).replace('.', ',')}</span></div>
+            <div style={sumRow}><span>DESCUENTO</span><span>{discount.toFixed(2).replace('.', ',')}</span></div>
+            <div style={sumRow}><span>SUBTOTAL 2</span><span>{(subtotal - discount).toFixed(2).replace('.', ',')}</span></div>
+            <div style={sumRow}><span>BASE IVA 15%</span><span>{(subtotal - discount).toFixed(2).replace('.', ',')}</span></div>
+            <div style={sumRow}><span>IVA 15%</span><span>{iva.toFixed(2).replace('.', ',')}</span></div>
+            <div style={{ ...sumRow, fontWeight: 700 }}><span>TOTAL</span><span>{finalTotal.toFixed(2).replace('.', ',')}</span></div>
           </div>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 14, fontSize: 35, lineHeight: 1.35, padding: '0 4px' }}>
-          Debo y pagaré al vencimiento incondicionalmente en esta ciudad o en el lugar que se me reconvenga a la orden de DISTRIBUIDORA Y COMERCIALIZADORA SURTIMAX SA la suma de dinero indicada en el "VALOR TOTAL" de este documento.
+        <div className="print-keep" style={{ marginTop: 12, fontSize: 14, lineHeight: 1.35, padding: '0 4px' }}>
+          Debo y pagaré al vencimiento incondicionalmente en esta ciudad o en el lugar que se me reconvenga a la orden de DISTRIBUIDORA Y COMERCIALIZADORA SURTIMAX SA la suma de dinero indicada en el "VALOR TOTAL" de este documento. En caso de mora pagaré la tasa de interés máxima vigente a la fecha de vencimiento.
         </div>
 
-        <div className="print-keep" style={{ marginTop: 28, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 36, fontSize: 36, textAlign: 'center' }}>
+        <div className="print-keep" style={{ marginTop: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30, fontSize: 14, textAlign: 'center' }}>
           <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma autorizada</div></div>
           <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma cliente</div></div>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 18, fontSize: 32, lineHeight: 1.35, padding: '0 4px' }}>
-          Cordialsa y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
+        <div className="print-keep" style={{ marginTop: 14, fontSize: 12, lineHeight: 1.35, padding: '0 4px' }}>
+          Cordiales y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
         </div>
-      </div>
       </div>
       </div>
 
@@ -239,27 +273,33 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: A4 portrait; margin: 8mm; }
+          @page { size: A4 portrait; margin: 6mm; }
+          .quotation-print-root { position: static !important; width: auto !important; }
           #quotation-document {
             border: 1px solid #000 !important;
-            width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
+            width: 198mm !important;
+            max-width: 198mm !important;
+            margin: 0 auto !important;
             height: auto !important;
             position: relative;
+            padding: 8px !important;
+            font-size: 92% !important;
           }
           #quotation-document > div {
-            break-inside: auto;
-            page-break-inside: auto;
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
           #quotation-document table,
           #quotation-document tbody,
-          #quotation-document tr {
-            break-inside: auto !important;
-            page-break-inside: auto !important;
+          #quotation-document tr,
+          #quotation-document td,
+          #quotation-document th {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
+          #quotation-document .filler-row td { height: 90px !important; }
           #quotation-document .print-keep {
-            break-inside: avoid-column;
+            break-inside: avoid;
             page-break-inside: avoid;
           }
           #quotation-document .signature-block {
@@ -290,8 +330,8 @@ function normalizeWhatsAppNumber(phone: string) {
 function ClientRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ fontSize: 13 }}>
-      <span style={{ color: '#78909C' }}>{label}: </span>
-      <strong style={{ color: '#1A237E' }}>{value}</strong>
+      <span style={{ color: '#000', opacity: 0.75 }}>{label}: </span>
+      <strong style={{ color: '#000' }}>{value}</strong>
     </div>
   );
 }
