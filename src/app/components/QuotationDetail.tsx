@@ -129,10 +129,10 @@ export function QuotationDetail() {
       </div>
 
       {/* Document */}
-      <div className="quotation-print-root format-a5-print">
+      <div className="quotation-print-root format-a5-print invoice-page">
       <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 980, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 16 }}>
 
-        <div className="print-keep" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, alignItems: 'start' }}>
+        <div className="print-keep invoice-section" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, alignItems: 'start' }}>
           <div>
             <img src={logoImg} alt="SURTIMAX" style={{ height: 74, objectFit: 'contain', marginBottom: 8 }} />
             <div style={{ display: 'flex', gap: 26, fontSize: 16, marginLeft: 10, marginTop: 2 }}>
@@ -161,7 +161,7 @@ export function QuotationDetail() {
           </div>
         </div>
 
-        <div className="print-keep" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
+        <div className="print-keep invoice-section" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <strong style={{ fontSize: 14, letterSpacing: 1 }}>INFORMACIÓN DEL CLIENTE:</strong>
             {editingClient ? (
@@ -197,7 +197,7 @@ export function QuotationDetail() {
         </div>
 
 
-        <div style={{ marginTop: 14 }}>
+        <div className="invoice-table" style={{ marginTop: 14 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
               <tr>
@@ -229,7 +229,7 @@ export function QuotationDetail() {
           </table>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 300px', gap: 10 }}>
+        <div className="print-keep totals-section" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 300px', gap: 10 }}>
           <div style={{ border: '1px solid #000', minHeight: 94, padding: '8px 10px', fontSize: 11 }}>OBSERVACION:</div>
           <div style={{ border: '1px solid #000', padding: '8px 10px', fontSize: 12 }}>
             <div style={sumRow}><span>SUBTOTAL</span><span>{subtotal.toFixed(2).replace('.', ',')}</span></div>
@@ -245,7 +245,7 @@ export function QuotationDetail() {
           Debo y pagaré al vencimiento incondicionalmente en esta ciudad o en el lugar que se me reconvenga a la orden de DISTRIBUIDORA Y COMERCIALIZADORA SURTIMAX SA la suma de dinero indicada en el "VALOR TOTAL" de este documento. En caso de mora pagaré la tasa de interés máxima vigente a la fecha de vencimiento.
         </div>
 
-        <div className="print-keep" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, fontSize: 11, textAlign: 'center' }}>
+        <div className="print-keep signature-section" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, fontSize: 11, textAlign: 'center' }}>
           <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma autorizada</div></div>
           <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma cliente</div></div>
         </div>
@@ -261,7 +261,7 @@ export function QuotationDetail() {
           :root {
             --print-scale: 1;
             --print-top-padding: 10px;
-            --print-page-margin: 4mm;
+            --print-page-margin: 0mm;
           }
 
           @page { margin: var(--print-page-margin); }
@@ -274,6 +274,21 @@ export function QuotationDetail() {
           body { background: white !important; }
 
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
+
+          .invoice-page {
+            page-break-after: always;
+            break-after: page;
+            overflow: hidden;
+          }
+
+          .invoice-section,
+          .invoice-table,
+          .totals-section,
+          .signature-section {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
           #quotation-document { box-shadow: none !important; border: none !important; border-radius: 0 !important; background: #fff !important; }
           #quotation-document [style*="background"],
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
@@ -316,7 +331,7 @@ export function QuotationDetail() {
 
           @media print and (max-width: 148mm) {
             :root {
-              --print-scale: 0.707;
+              --print-scale: 0.66;
             }
           }
 
