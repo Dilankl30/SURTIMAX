@@ -129,7 +129,7 @@ export function QuotationDetail() {
       </div>
 
       {/* Document */}
-      <div className="quotation-print-root format-a5-print">
+      <div className="quotation-print-root format-a5-print invoice-page">
       <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 980, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 16 }}>
 
         <div className="print-keep invoice-section" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, alignItems: 'start' }}>
