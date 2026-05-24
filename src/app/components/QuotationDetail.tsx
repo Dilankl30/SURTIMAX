@@ -134,20 +134,17 @@ export function QuotationDetail() {
 
         <div className="print-keep invoice-section" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, alignItems: 'start' }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 74, objectFit: 'contain', marginBottom: 8 }} />
-            <div style={{ display: 'flex', gap: 26, fontSize: 16, marginLeft: 10, marginTop: 2 }}>
-              <span>AMBIENTE</span><span>PRODUCCIÓN</span>
-            </div>
-            <div style={{ marginTop: 16, marginLeft: 8, fontSize: 18, fontWeight: 700 }}><strong>No. Prefactura:</strong> {generatedPrefacturaNumber}</div>
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 118, objectFit: 'contain', marginBottom: 4 }} />
+            <div style={{ marginTop: 8, marginLeft: 8, fontSize: 18, fontWeight: 700 }}><strong>No. Prefactura:</strong> {generatedPrefacturaNumber}</div>
           </div>
 
           <div>
             <h1 style={{ margin: 0, fontSize: 20, letterSpacing: 0.2, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
             <div style={{ fontSize: 14, lineHeight: 1.35, marginTop: 8 }}>
-              <div>RUC: 210020260001</div>
-              <div>Dirección: QUITO</div>
-              <div>Teléfono: 0980320848</div>
-              <div>Email: GQ_SurtiMax@outlook.com</div>
+              <div><span style={{ color: '#C62828', marginRight: 8 }}>👤</span>RUC: 210020260001</div>
+              <div><span style={{ color: '#C62828', marginRight: 8 }}>📍</span>Dirección: QUITO</div>
+              <div><span style={{ color: '#C62828', marginRight: 8 }}>📞</span>Teléfono: 0980320848</div>
+              <div><span style={{ color: '#C62828', marginRight: 8 }}>✉</span>Email: GQ_SurtiMax@outlook.com</div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 24, alignItems: 'start' }}>
