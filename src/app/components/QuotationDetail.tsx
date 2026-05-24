@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Printer, ArrowLeft, MessageCircle, Edit2, Save, X } from 'lucide-react';
 import { useStore } from '../store';
 import type { QuotationClientData } from '../store';
-import { createQuotationPdfBlobFromElement } from '../utils/quotationPdf';
 import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
 
 export function QuotationDetail() {
@@ -42,6 +41,7 @@ export function QuotationDetail() {
   const subtotal = totalCotizado / 1.15;
   const iva = totalCotizado - subtotal;
   const finalTotal = totalCotizado - discount;
+  const emissionDate = quote.date && !Number.isNaN(new Date(quote.date).getTime()) ? quote.date : new Date().toISOString().slice(0, 10);
 
   const handleSaveDiscount = () => {
     const d = Math.max(0, parseFloat(tempDiscount) || 0);
@@ -80,67 +80,8 @@ export function QuotationDetail() {
   const adminWAMsg = encodeURIComponent(`Hola SURTIMAX, quiero información sobre mi prefactura ${quote.number}`);
   const clientWAUrl = `https://wa.me/${clientWANum}?text=${clientWAMsg}`;
 
-  const downloadPdf = (blob: Blob, fileName: string) => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleSendClientWhatsApp = async () => {
-    const documentElement = document.getElementById('quotation-document');
-    if (!documentElement) {
-      alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
-      return;
-    }
-    let pdfBlob: Blob;
-
-    try {
-      pdfBlob = await createQuotationPdfBlobFromElement(documentElement);
-    } catch {
-      alert('No se pudo generar el PDF visual de la prefactura en este dispositivo. Intenta desde otro navegador o desde escritorio.');
-      return;
-    }
-
-    const fileName = `${quote.number}.pdf`;
-    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
-    if (navigator.canShare?.({ files: [pdfFile] })) {
-      try {
-        await navigator.share({
-          title: `Prefactura ${quote.number}`,
-          text: decodeURIComponent(clientWAMsg),
-          files: [pdfFile],
-        });
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') return;
-      }
-    }
-
-    downloadPdf(pdfBlob, fileName);
-    window.open(clientWAUrl, '_blank', 'noopener,noreferrer');
-  };
-  const handleDownloadPdf = async () => {
-    const documentElement = document.getElementById('quotation-document');
-    if (!documentElement) {
-      alert('No se pudo preparar la prefactura visual para PDF. Recarga la página e inténtalo de nuevo.');
-      return;
-    }
-    let pdfBlob: Blob;
-
-    try {
-      pdfBlob = await createQuotationPdfBlobFromElement(documentElement);
-    } catch {
-      alert('No se pudo generar el PDF visual de la prefactura en este dispositivo. Intenta desde otro navegador o desde escritorio.');
-      return;
-    }
-
-    downloadPdf(pdfBlob, `${quote.number}.pdf`);
+  const handlePrintPreview = () => {
+    window.print();
   };
 
   const backView = currentUser?.isAdmin ? 'admin-quotes' : 'my-quotes';
@@ -150,19 +91,20 @@ export function QuotationDetail() {
 
       {/* Action bar */}
       <div className="no-print" style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button onClick={() => setView(backView)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: '2px solid #E0E0E0', background: 'white', cursor: 'pointer', color: '#546E7A', fontSize: 14 }}>
+        <button onClick={() => setView(backView)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: '2px solid #E0E0E0', background: 'white', cursor: 'pointer', color: '#000', fontSize: 14 }}>
           <ArrowLeft size={16} /> Volver
         </button>
-        <button onClick={handleDownloadPdf} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-          <Printer size={16} /> Descargar PDF
+        <button onClick={handlePrintPreview} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#0D47A1', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+          <Printer size={16} /> Visualizar / Imprimir
         </button>
         {currentUser?.isAdmin ? (
-          <button
-            onClick={handleSendClientWhatsApp}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#25D366', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+          <a
+            href={clientWAUrl}
+            target="_blank" rel="noopener noreferrer"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: 'none', background: '#25D366', color: 'white', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}
           >
-            <MessageCircle size={16} /> Enviar PDF por WhatsApp
-          </button>
+            <MessageCircle size={16} /> Enviar por WhatsApp
+          </a>
         ) : (
           <a
             href={`https://wa.me/593958737004?text=${adminWAMsg}`}
@@ -183,152 +125,112 @@ export function QuotationDetail() {
       </div>
 
       {/* Document */}
-      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 28px rgba(0,0,0,0.1)', border: '1px solid #E3F2FD' }}>
+      <div className="quotation-print-root">
+      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 1040, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 14 }}>
 
-        {/* Header */}
-        <div style={{ padding: '24px 32px', borderBottom: '3px solid #0D47A1', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+        <div className="print-keep" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 14, alignItems: 'start' }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 110, objectFit: 'contain', marginBottom: 10 }} />
-            <div style={{ fontSize: 12, color: '#546E7A', lineHeight: 1.8 }}>
-              <div><strong style={{ color: '#0D47A1' }}>CIUDAD:</strong> QUITO</div>
-              <div><strong style={{ color: '#0D47A1' }}>CI O RUC:</strong> 2100282249001</div>
-              <div><strong style={{ color: '#0D47A1' }}>TLF:</strong> 0958737004</div>
-              <div><strong style={{ color: '#0D47A1' }}>EMAIL:</strong> ventas@surtimax.com</div>
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 94, objectFit: 'contain', marginBottom: 10 }} />
+            <div style={{ display: 'flex', gap: 26, fontSize: 34, marginLeft: 16, marginTop: 4 }}>
+              <span>AMBIENTE</span><span>PRODUCCIÓN</span>
             </div>
+            <div style={{ marginTop: 46, marginLeft: 20, fontSize: 40 }}><strong>No. Prefactura:</strong></div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <h1 style={{ color: '#0D47A1', fontSize: 30, fontWeight: 800, margin: '0 0 14px', letterSpacing: 2 }}>PREFACTURA</h1>
-            <div style={{ fontSize: 13, color: '#546E7A', lineHeight: 1.8 }}>
-              <div><strong>No. Prefactura:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
-              <div><strong>Fecha:</strong> {new Date(quote.date).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+
+          <div>
+            <h1 style={{ margin: 0, fontSize: 56, letterSpacing: 1, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
+            <div style={{ fontSize: 44, lineHeight: 1.4, marginTop: 8 }}>
+              <div>RUC: 210020260001</div>
+              <div>Dirección: QUITO</div>
+              <div>Teléfono: 0980320848</div>
+              <div>Email: GQ_SurtiMax@outlook.com</div>
             </div>
-            <div style={{ marginTop: 10 }}>
-              <span style={{ padding: '4px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, backgroundColor: quote.status === 'delivered' ? '#E8F5E9' : '#FFF3E0', color: quote.status === 'delivered' ? '#2E7D32' : '#E65100' }}>
-                {quote.status === 'delivered' ? '✓ ENTREGADO' : '⏳ PENDIENTE'}
-              </span>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 38, alignItems: 'start' }}>
+              <div />
+              <div style={{ fontSize: 42, lineHeight: 1.5 }}>
+                <div style={{ fontWeight: 700 }}>REGIMEN GENERAL:</div>
+                <div>Código Cliente:&nbsp; C01302868-005</div>
+                <div>Fecha Emisión:&nbsp; {new Date(emissionDate).toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', columnGap: 20, rowGap: 6, fontSize: 42, marginTop: 22 }}>
+              <div>Establecimiento:</div><div>SURTIMAX</div>
+              <div>RUC / C.I.:</div><div>210020260001</div>
+              <div>Dirección:</div><div>QUITO</div>
+              <div>Teléfono:</div><div>0980320848</div>
+              <div>Email:</div><div>GQ_SurtiMax@outlook.com</div>
             </div>
           </div>
         </div>
 
-        {/* Client info */}
-        <div style={{ padding: '18px 32px', backgroundColor: '#F8FAFE', borderBottom: '1px solid #E3F2FD' }}>
-          <h3 style={{ margin: '0 0 12px', color: '#0D47A1', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 6, display: 'inline-block' }}>
-            Información del cliente:
-          </h3>
-          {currentUser?.isAdmin && (
-            <div className="no-print" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {editingClient ? (
-                <>
-                  <button onClick={handleSaveClient} style={miniSaveBtn}><Save size={13} /> Guardar datos</button>
-                  <button onClick={() => { setEditingClient(false); setClientEditError(''); }} style={miniCancelBtn}><X size={13} /> Cancelar</button>
-                </>
-              ) : (
-                <button onClick={() => setEditingClient(true)} style={miniEditBtn}><Edit2 size={13} /> Editar datos del cliente</button>
-              )}
-            </div>
-          )}
-          {editingClient ? (
-            <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px 14px', fontSize: 13 }}>
-              <ClientEditField label="Nombre / Razón Social *" value={clientDraft.clientName} onChange={value => handleClientDraftChange('clientName', value)} />
-              <ClientEditField label="Teléfono *" value={clientDraft.clientPhone} onChange={value => handleClientDraftChange('clientPhone', value)} />
-              <ClientEditField label="R.U.C. / C.I. *" value={clientDraft.clientCedula} onChange={value => handleClientDraftChange('clientCedula', value)} />
-              <ClientEditField label="Dirección *" value={clientDraft.clientAddress} onChange={value => handleClientDraftChange('clientAddress', value)} />
-              <ClientEditField label="Correo electrónico *" value={clientDraft.clientEmail ?? ''} onChange={value => handleClientDraftChange('clientEmail', value)} type="email" />
-              {clientEditError && <div style={{ gridColumn: '1 / -1', color: '#C62828', backgroundColor: '#FFEBEE', border: '1px solid #FFCDD2', borderRadius: 8, padding: '8px 10px', fontSize: 12 }}>⚠️ {clientEditError}</div>}
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px 24px', fontSize: 13 }}>
-              <ClientRow label="Nombre / Razón Social" value={quote.clientName} />
-              <ClientRow label="Teléfono" value={quote.clientPhone} />
-              <ClientRow label="R.U.C. / C.I." value={quote.clientCedula} />
-              <ClientRow label="Dirección" value={quote.clientAddress} />
-              {quote.clientEmail && <ClientRow label="Correo" value={quote.clientEmail} />}
-            </div>
-          )}
-        </div>
-
-        {/* Items table */}
-        <div style={{ padding: '0 32px 24px' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 20 }}>
-              <thead>
-                <tr style={{ backgroundColor: '#0D47A1', color: 'white' }}>
-                  <th style={th}>CÓDIGO</th>
-                  <th style={th}>CANTIDAD</th>
-                  <th style={{ ...th, textAlign: 'left', paddingLeft: 16 }}>DESCRIPCIÓN DEL ÍTEM</th>
-                  <th style={th}>P. UNITARIO</th>
-                  <th style={th}>SUBTOTAL</th>
+        <div style={{ marginTop: 14 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 34 }}>
+            <thead>
+              <tr>
+                <th style={bigTh}>Código</th>
+                <th style={bigThDesc}>Descripción</th>
+                <th style={bigTh}>Cant.</th>
+                <th style={bigTh}>Precio</th>
+                <th style={bigTh}>% Dscto</th>
+                <th style={bigTh}>IVA</th>
+                <th style={bigTh}>Subtotal</th>
+                <th style={bigTh}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {quote.items.map((item, i) => (
+                <tr key={i}>
+                  <td style={bigTd}>{item.code}</td>
+                  <td style={{ ...bigTd, textAlign: 'left' }}>{item.description}</td>
+                  <td style={bigTd}>{item.quantity}</td>
+                  <td style={bigTd}>${item.unitPrice.toFixed(2)}</td>
+                  <td style={bigTd}>{discount > 0 ? `${((discount / totalCotizado) * 100).toFixed(2)}%` : '0,00%'}</td>
+                  <td style={bigTd}>15%</td>
+                  <td style={bigTd}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                  <td style={bigTd}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {quote.items.map((item, i) => (
-                  <tr key={i} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#F8FAFE', borderBottom: '1px solid #E3F2FD' }}>
-                    <td style={tdC}><span style={{ backgroundColor: '#E3F2FD', color: '#1565C0', borderRadius: 4, padding: '1px 7px', fontSize: 11, fontWeight: 600 }}>{item.code}</span></td>
-                    <td style={tdC}>{item.quantity}</td>
-                    <td style={{ ...tdC, textAlign: 'left', paddingLeft: 16, fontWeight: 500, color: '#1A237E' }}>{item.description}</td>
-                    <td style={tdC}>${item.unitPrice.toFixed(2)}</td>
-                    <td style={{ ...tdC, fontWeight: 700, color: '#0D47A1' }}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+              <tr><td colSpan={8} style={{ ...bigTd, height: 440, borderTop: 'none' }} /></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="print-keep" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 380px', gap: 10 }}>
+          <div style={{ border: '1px solid #000', minHeight: 90, padding: '8px 10px', fontSize: 36 }}>OBSERVACION:</div>
+          <div style={{ border: '1px solid #000', padding: '10px 14px', fontSize: 40 }}>
+            <div style={sumRow}><span>SUBTOTAL</span><span>${subtotal.toFixed(2)}</span></div>
+            <div style={sumRow}><span>DESCUENTO</span><span>${discount.toFixed(2)}</span></div>
+            <div style={sumRow}><span>SUBTOTAL 2</span><span>${(subtotal - discount).toFixed(2)}</span></div>
+            <div style={sumRow}><span>BASE IVA 15%</span><span>${(subtotal - discount).toFixed(2)}</span></div>
+            <div style={sumRow}><span>IVA 15%</span><span>${iva.toFixed(2)}</span></div>
+            <div style={{ ...sumRow, fontWeight: 700 }}><span>TOTAL</span><span>${finalTotal.toFixed(2)}</span></div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div style={{ padding: '20px 32px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '1px solid #E3F2FD', flexWrap: 'wrap', gap: 24 }}>
-          <div style={{ maxWidth: 420 }}>
-            <h4 style={{ color: '#0D47A1', margin: '0 0 10px', fontWeight: 700, fontSize: 13 }}>VALIDEZ Y CONDICIONES COMERCIALES:</h4>
-            <p style={{ color: '#546E7A', margin: 0, fontSize: 12 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
-          </div>
-
-          <div style={{ minWidth: 280, width: 300 }}>
-            <TotalRow label="SUBTOTAL:" value={`$${subtotal.toFixed(2)}`} />
-            <TotalRow label="I.V.A. 15%:" value={`$${iva.toFixed(2)}`} />
-            <TotalRow
-              label="DESCUENTO:"
-              value={
-                currentUser?.isAdmin ? (
-                  editingDiscount ? (
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                      <input
-                        type="number" value={tempDiscount}
-                        onChange={e => setTempDiscount(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleSaveDiscount()}
-                        style={{ width: 80, padding: '3px 7px', border: '2px solid #1976D2', borderRadius: 6, fontSize: 13, outline: 'none' }}
-                        autoFocus
-                      />
-                      <button onClick={handleSaveDiscount} style={{ background: '#388E3C', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 6, padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
-                        <Save size={13} />
-                      </button>
-                      <button onClick={() => setEditingDiscount(false)} style={{ background: '#EF5350', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 6, padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ) : (
-                    <button onClick={() => setEditingDiscount(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0D47A1', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, fontSize: 13, padding: 0 }}>
-                      ${discount.toFixed(2)} <Edit2 size={12} style={{ color: '#1976D2' }} />
-                    </button>
-                  )
-                ) : `$${discount.toFixed(2)}`
-              }
-            />
-            <div style={{ height: 1, backgroundColor: '#E3F2FD', margin: '8px 0' }} />
-            <TotalRow label="TOTAL PREFACTURA:" value={`$${finalTotal.toFixed(2)}`} highlight />
-          </div>
+        <div className="print-keep" style={{ marginTop: 14, fontSize: 35, lineHeight: 1.35, padding: '0 4px' }}>
+          Debo y pagaré al vencimiento incondicionalmente en esta ciudad o en el lugar que se me reconvenga a la orden de DISTRIBUIDORA Y COMERCIALIZADORA SURTIMAX SA la suma de dinero indicada en el "VALOR TOTAL" de este documento.
         </div>
 
-        {/* Signature */}
-        <div style={{ padding: '10px 32px 36px', textAlign: 'center' }}>
-          <div style={{ display: 'inline-block', borderTop: '2px solid #0D47A1', paddingTop: 10, minWidth: 220, color: '#546E7A', fontSize: 13, letterSpacing: 1 }}>
-            RECIBÍ CONFORME
-          </div>
+        <div className="print-keep" style={{ marginTop: 28, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 36, fontSize: 36, textAlign: 'center' }}>
+          <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma autorizada</div></div>
+          <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma cliente</div></div>
         </div>
+
+        <div className="print-keep" style={{ marginTop: 18, fontSize: 32, lineHeight: 1.35, padding: '0 4px' }}>
+          Cordialsa y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
+        </div>
+      </div>
       </div>
 
       <style>{`
         @media print {
+          body * { visibility: hidden !important; }
+          .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
+          .quotation-print-root { position: absolute; left: 10mm; top: 10mm; width: calc(100% - 20mm); }
           .no-print { display: none !important; }
+          .only-print { display: inline !important; }
           body { background: white !important; }
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
           #quotation-document { box-shadow: none !important; border: 1px solid #000 !important; border-radius: 0 !important; background: #fff !important; }
@@ -336,7 +238,41 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { margin: 10mm; }
+          @page { size: A4 portrait; margin: 8mm; }
+          #quotation-document {
+            border: 1px solid #000 !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            height: auto !important;
+            position: relative;
+          }
+          #quotation-document > div {
+            break-inside: auto;
+            page-break-inside: auto;
+          }
+          #quotation-document table,
+          #quotation-document tbody,
+          #quotation-document tr {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+          #quotation-document .print-keep {
+            break-inside: avoid-column;
+            page-break-inside: avoid;
+          }
+          #quotation-document .signature-block {
+            position: absolute;
+            bottom: 6mm;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          .status-badge {
+            display: none !important;
+          }
         }
       `}</style>
     </div>
@@ -370,16 +306,22 @@ function ClientEditField({ label, value, onChange, type = 'text' }: { label: str
 
 function TotalRow({ label, value, highlight }: { label: string; value: any; highlight?: boolean }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', columnGap: 14, alignItems: 'center', padding: highlight ? '10px 12px' : '7px 12px', backgroundColor: highlight ? '#0D47A1' : 'transparent', borderRadius: highlight ? 8 : 0, marginBottom: highlight ? 0 : 2 }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: highlight ? 'white' : '#546E7A', textAlign: 'left' }}>{label}</span>
-      <span style={{ fontSize: highlight ? 17 : 13, fontWeight: 800, color: highlight ? 'white' : '#0D47A1', minWidth: 110, textAlign: 'right', justifySelf: 'end' }}>{value}</span>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', columnGap: 14, alignItems: 'center', padding: highlight ? '10px 12px' : '7px 12px', backgroundColor: highlight ? '#0D47A1' : 'transparent', borderRadius: highlight ? 8 : 0, marginBottom: highlight ? 0 : 2 }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: highlight ? 'white' : '#000', textAlign: 'left' }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: highlight ? 'white' : '#000', minWidth: 120, textAlign: 'right', justifySelf: 'end', fontFamily: 'Arial, Helvetica, sans-serif' }}>{value}</span>
     </div>
   );
 }
 
-const miniEditBtn: React.CSSProperties = { background: '#E3F2FD', border: '1px solid #BBDEFB', color: '#0D47A1', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
+
+const bigTh: React.CSSProperties = { border: '1px solid #000', padding: '6px 8px', textAlign: 'center', fontWeight: 700 };
+const bigThDesc: React.CSSProperties = { ...bigTh, textAlign: 'center' };
+const bigTd: React.CSSProperties = { borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000', padding: '5px 8px', textAlign: 'center', verticalAlign: 'top' };
+const sumRow: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr auto', marginBottom: 8 };
+
+const miniEditBtn: React.CSSProperties = { background: '#E3F2FD', border: '1px solid #BBDEFB', color: '#000', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 const miniSaveBtn: React.CSSProperties = { background: '#388E3C', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 const miniCancelBtn: React.CSSProperties = { background: '#EF5350', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 
-const th: React.CSSProperties = { padding: '11px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, letterSpacing: 0.5 };
-const tdC: React.CSSProperties = { padding: '10px 12px', textAlign: 'center', fontSize: 13 };
+const th: React.CSSProperties = { padding: '6px 7px', textAlign: 'center', fontSize: 10, fontWeight: 700, letterSpacing: 0.3 };
+const tdC: React.CSSProperties = { padding: '5px 7px', textAlign: 'center', fontSize: 10 };
