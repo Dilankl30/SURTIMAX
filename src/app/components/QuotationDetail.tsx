@@ -87,7 +87,7 @@ export function QuotationDetail() {
   const backView = currentUser?.isAdmin ? 'admin-quotes' : 'my-quotes';
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px 16px' }}>
 
       {/* Action bar */}
       <div className="no-print" style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -241,6 +241,7 @@ export function QuotationDetail() {
           @page { size: A4 portrait; margin: 6mm; }
           .quotation-print-root { position: static !important; width: auto !important; }
           #quotation-document {
+            zoom: 1 !important;
             border: 1px solid #000 !important;
             width: 198mm !important;
             max-width: 198mm !important;
