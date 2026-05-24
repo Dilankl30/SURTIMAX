@@ -133,10 +133,11 @@ export function QuotationDetail() {
           <div>
             <img src={logoImg} alt="SURTIMAX" style={{ height: 86, objectFit: 'contain', marginBottom: 6 }} />
             <div style={{ fontSize: 10, color: '#000', lineHeight: 1.5 }}>
+              <div><strong style={{ color: '#000' }}>DIRECCIÓN:</strong> QUITO</div>
               <div><strong style={{ color: '#000' }}>CIUDAD:</strong> QUITO</div>
               <div><strong style={{ color: '#000' }}>CI O RUC:</strong> 2100282249001</div>
               <div><strong style={{ color: '#000' }}>TLF:</strong> 0958737004</div>
-              <div><strong style={{ color: '#000' }}>EMAIL:</strong> ventas@surtimax.com</div>
+              <div><strong style={{ color: '#000' }}>EMAIL:</strong> GQ_SurtiMax@outlook.com</div>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
