@@ -274,7 +274,7 @@ export function QuotationDetail() {
           #quotation-document {
             border: none !important;
             width: 100% !important;
-            max-width: 100% !important;
+            max-width: 980px !important;
             margin: 0 auto !important;
             height: auto !important;
             position: relative;
