@@ -330,8 +330,8 @@ export function QuotationDetail() {
 
           @media print and (max-width: 148mm) {
             :root {
-              --print-scale: 0.695;
-              --print-translate-y: -2mm;
+              --print-scale: 0.76;
+              --print-translate-y: -1mm;
             }
           }
 
