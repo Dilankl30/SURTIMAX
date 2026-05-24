@@ -87,7 +87,7 @@ export function QuotationDetail() {
   const backView = currentUser?.isAdmin ? 'admin-quotes' : 'my-quotes';
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px 16px' }}>
 
       {/* Action bar */}
       <div className="no-print" style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -238,8 +238,9 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: A4 portrait; margin: 8mm; }
+          @page { size: 216mm 330mm; margin: 8mm; }
           #quotation-document {
+            zoom: 1 !important;
             border: 1px solid #000 !important;
             width: 100% !important;
             max-width: none !important;
