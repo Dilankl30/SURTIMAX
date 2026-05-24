@@ -155,7 +155,7 @@ export function QuotationDetail() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', columnGap: 20, rowGap: 6, fontSize: 42, marginTop: 22 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', columnGap: 10, rowGap: 4, fontSize: 18, marginTop: 12 }}>
               <div>Establecimiento:</div><div>SURTIMAX</div>
               <div>RUC / C.I.:</div><div>210020260001</div>
               <div>Dirección:</div><div>QUITO</div>
@@ -276,6 +276,7 @@ export function QuotationDetail() {
           @page { size: A4 portrait; margin: 8mm; }
           .quotation-print-root { position: static !important; width: auto !important; }
           #quotation-document {
+            zoom: 1 !important;
             border: 1px solid #000 !important;
             width: 100% !important;
             max-width: 100% !important;
