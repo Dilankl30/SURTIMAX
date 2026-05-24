@@ -192,7 +192,7 @@ export function QuotationDetail() {
                   <td style={bigTd}>{(item.quantity * item.unitPrice).toFixed(2).replace('.', ',')}</td>
                 </tr>
               ))}
-              <tr><td colSpan={8} style={{ ...bigTd, height: 310, borderTop: 'none' }} /></tr>
+              <tr className="filler-row"><td colSpan={8} style={{ ...bigTd, height: 310, borderTop: 'none' }} /></tr>
             </tbody>
           </table>
         </div>
@@ -238,28 +238,34 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: 216mm 330mm; margin: 8mm; }
+          @page { size: A4 portrait; margin: 6mm; }
+          .quotation-print-root { position: static !important; width: auto !important; }
           #quotation-document {
             zoom: 1 !important;
             border: 1px solid #000 !important;
-            width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
+            width: 198mm !important;
+            max-width: 198mm !important;
+            margin: 0 auto !important;
             height: auto !important;
             position: relative;
+            padding: 8px !important;
+            font-size: 92% !important;
           }
           #quotation-document > div {
-            break-inside: auto;
-            page-break-inside: auto;
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
           #quotation-document table,
           #quotation-document tbody,
-          #quotation-document tr {
-            break-inside: auto !important;
-            page-break-inside: auto !important;
+          #quotation-document tr,
+          #quotation-document td,
+          #quotation-document th {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
+          #quotation-document .filler-row td { height: 90px !important; }
           #quotation-document .print-keep {
-            break-inside: avoid-column;
+            break-inside: avoid;
             page-break-inside: avoid;
           }
           #quotation-document .signature-block {
