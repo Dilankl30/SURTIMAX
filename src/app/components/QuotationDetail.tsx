@@ -260,7 +260,7 @@ export function QuotationDetail() {
         @media print {
           body * { visibility: hidden !important; }
           .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
-          .quotation-print-root { position: absolute; left: 0; top: 0; width: 100%; }
+          .quotation-print-root { position: static !important; width: 100% !important; margin: 0 !important; }
           .no-print { display: none !important; }
           .only-print { display: inline !important; }
           body { background: white !important; }
@@ -270,21 +270,16 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: A4 portrait; margin: 0; }
-          .quotation-print-root { position: static !important; width: auto !important; }
+          @page { margin: 0; }
           #quotation-document {
             border: none !important;
             width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 !important;
+            max-width: 980px !important;
+            margin: 0 auto !important;
             height: auto !important;
             position: relative;
-            padding: 8px !important;
-            font-size: 90% !important;
-          }
-          #quotation-document > div {
-            break-inside: avoid;
-            page-break-inside: avoid;
+            padding: 16px !important;
+            font-size: inherit !important;
           }
           #quotation-document table {
             break-inside: auto !important;
@@ -297,10 +292,6 @@ export function QuotationDetail() {
           #quotation-document .filler-row {
             display: none !important;
           }
-          #quotation-document .print-keep {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
           #quotation-document .signature-block {
             position: absolute;
             bottom: 6mm;
@@ -312,13 +303,6 @@ export function QuotationDetail() {
           }
 
           
-          @media print and (max-width: 148mm) {
-            #quotation-document {
-              padding: 4mm !important;
-              font-size: 78% !important;
-            }
-            #quotation-document .filler-row td { height: 40px !important; }
-          }
           .status-badge {
             display: none !important;
           }
