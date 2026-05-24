@@ -260,7 +260,7 @@ export function QuotationDetail() {
         @media print {
           :root {
             --print-scale: 1;
-            --print-top-padding: 10px;
+            --print-top-padding: 6px;
             --print-page-margin: 0mm;
           }
 
@@ -275,18 +275,16 @@ export function QuotationDetail() {
 
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
 
-          .invoice-page {
-            page-break-after: always;
-            break-after: page;
-            overflow: hidden;
-          }
-
           .invoice-section,
-          .invoice-table,
           .totals-section,
           .signature-section {
             break-inside: avoid;
             page-break-inside: avoid;
+          }
+
+          .invoice-table {
+            break-inside: auto;
+            page-break-inside: auto;
           }
 
           #quotation-document { box-shadow: none !important; border: none !important; border-radius: 0 !important; background: #fff !important; }
@@ -298,14 +296,14 @@ export function QuotationDetail() {
           #quotation-document {
             border: none !important;
             width: calc(100% / var(--print-scale)) !important;
-            max-width: none !important;
+            max-width: 100% !important;
             margin: 0 auto !important;
             height: auto !important;
             position: relative;
             padding: var(--print-top-padding) 16px 16px 16px !important;
             font-size: inherit !important;
             transform: scale(var(--print-scale)) !important;
-            transform-origin: top center !important;
+            transform-origin: top left !important;
           }
 
           #quotation-document table {
@@ -331,7 +329,7 @@ export function QuotationDetail() {
 
           @media print and (max-width: 148mm) {
             :root {
-              --print-scale: 0.66;
+              --print-scale: 0.707;
             }
           }
 
