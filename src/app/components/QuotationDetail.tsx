@@ -260,7 +260,7 @@ export function QuotationDetail() {
         @media print {
           :root {
             --print-scale: 1;
-            --print-top-padding: 6px;
+            --print-top-padding: 0px;
             --print-page-margin: 0mm;
           }
 
@@ -268,10 +268,10 @@ export function QuotationDetail() {
 
           body * { visibility: hidden !important; }
           .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
-          .quotation-print-root { position: static !important; width: 100% !important; margin: 0 !important; }
+          .quotation-print-root { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
           .no-print { display: none !important; }
           .only-print { display: inline !important; }
-          body { background: white !important; }
+          html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
 
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
 
@@ -297,7 +297,7 @@ export function QuotationDetail() {
             border: none !important;
             width: calc(100% / var(--print-scale)) !important;
             max-width: 100% !important;
-            margin: 0 auto !important;
+            margin: 0 !important;
             height: auto !important;
             position: relative;
             padding: var(--print-top-padding) 16px 16px 16px !important;
