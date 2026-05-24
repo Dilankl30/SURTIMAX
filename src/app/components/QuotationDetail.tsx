@@ -161,7 +161,7 @@ export function QuotationDetail() {
           </div>
         </div>
 
-        <div className="print-keep no-print-client" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
+        <div className="print-keep" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <strong style={{ fontSize: 14, letterSpacing: 1 }}>INFORMACIÓN DEL CLIENTE:</strong>
             {editingClient ? (
@@ -258,47 +258,51 @@ export function QuotationDetail() {
 
       <style>{`
         @media print {
+          :root {
+            --print-scale: 1;
+            --print-top-padding: 10px;
+            --print-page-margin: 4mm;
+          }
+
+          @page { margin: var(--print-page-margin); }
+
           body * { visibility: hidden !important; }
           .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
-          .quotation-print-root { position: absolute; left: 10mm; top: 10mm; width: calc(100% - 20mm); }
+          .quotation-print-root { position: static !important; width: 100% !important; margin: 0 !important; }
           .no-print { display: none !important; }
           .only-print { display: inline !important; }
-          .no-print-client { display: none !important; }
           body { background: white !important; }
+
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
           #quotation-document { box-shadow: none !important; border: none !important; border-radius: 0 !important; background: #fff !important; }
           #quotation-document [style*="background"],
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: A4 portrait; margin: 10mm; }
-          .quotation-print-root { position: static !important; width: auto !important; }
+
           #quotation-document {
             border: none !important;
-            width: 100% !important;
-            max-width: 100% !important;
+            width: calc(100% / var(--print-scale)) !important;
+            max-width: none !important;
             margin: 0 auto !important;
             height: auto !important;
             position: relative;
-            padding: 8px !important;
-            font-size: 90% !important;
+            padding: var(--print-top-padding) 16px 16px 16px !important;
+            font-size: inherit !important;
+            transform: scale(var(--print-scale)) !important;
+            transform-origin: top center !important;
           }
-          #quotation-document > div {
-            break-inside: avoid;
-            page-break-inside: avoid;
+
+          #quotation-document table {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
           }
-          #quotation-document table,
-          #quotation-document tbody,
-          #quotation-document tr,
-          #quotation-document td,
-          #quotation-document th {
+          #quotation-document tr {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
-          #quotation-document .filler-row td { height: 120px !important; }
-          #quotation-document .print-keep {
-            break-inside: avoid;
-            page-break-inside: avoid;
+          #quotation-document .filler-row {
+            display: none !important;
           }
           #quotation-document .signature-block {
             position: absolute;
@@ -310,14 +314,12 @@ export function QuotationDetail() {
             page-break-inside: avoid;
           }
 
-          
           @media print and (max-width: 148mm) {
-            #quotation-document {
-              padding: 4mm !important;
-              font-size: 78% !important;
+            :root {
+              --print-scale: 0.707;
             }
-            #quotation-document .filler-row td { height: 40px !important; }
           }
+
           .status-badge {
             display: none !important;
           }
