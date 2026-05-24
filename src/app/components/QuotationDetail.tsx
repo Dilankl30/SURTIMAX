@@ -126,12 +126,12 @@ export function QuotationDetail() {
 
       {/* Document */}
       <div className="quotation-print-root">
-      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 820, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 900, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif' }}>
 
         {/* Header */}
         <div className="print-keep" style={{ padding: '16px 18px', borderBottom: '2px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 58, objectFit: 'contain', marginBottom: 6 }} />
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 86, objectFit: 'contain', marginBottom: 6 }} />
             <div style={{ fontSize: 10, color: '#000', lineHeight: 1.5 }}>
               <div><strong style={{ color: '#000' }}>CIUDAD:</strong> QUITO</div>
               <div><strong style={{ color: '#000' }}>CI O RUC:</strong> 2100282249001</div>
@@ -145,7 +145,7 @@ export function QuotationDetail() {
               <div><strong>No. Prefactura:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
               <div><strong>Fecha:</strong> {new Date(emissionDate).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
             </div>
-            <div style={{ marginTop: 10 }}>
+            <div className="status-badge" style={{ marginTop: 10 }}>
               <span style={{ padding: '4px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, backgroundColor: quote.status === 'delivered' ? '#E8F5E9' : '#FFF3E0', color: quote.status === 'delivered' ? '#2E7D32' : '#E65100' }}>
                 {quote.status === 'delivered' ? '✓ ENTREGADO' : '⏳ PENDIENTE'}
               </span>
@@ -277,7 +277,7 @@ export function QuotationDetail() {
         @media print {
           body * { visibility: hidden !important; }
           .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
-          .quotation-print-root { position: absolute; left: 8mm; top: 8mm; width: calc(100% - 16mm); }
+          .quotation-print-root { position: absolute; left: 10mm; top: 10mm; width: calc(100% - 20mm); }
           .no-print { display: none !important; }
           .only-print { display: inline !important; }
           body { background: white !important; }
@@ -287,26 +287,14 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: A4 landscape; margin: 8mm; }
+          @page { size: A4 portrait; margin: 10mm; }
           #quotation-document {
             border: 1px solid #000 !important;
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
-            height: calc(210mm - 16mm) !important;
-            column-count: 2;
-            column-gap: 8mm;
-            column-fill: auto;
+            height: auto !important;
             position: relative;
-          }
-          #quotation-document::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: calc(50% - 4mm);
-            width: 1px;
-            background: #000;
           }
           #quotation-document > div {
             break-inside: auto;
@@ -325,11 +313,14 @@ export function QuotationDetail() {
           #quotation-document .signature-block {
             position: absolute;
             bottom: 6mm;
-            left: calc(50% + 4mm);
-            width: calc(50% - 8mm);
+            left: 0;
+            width: 100%;
             text-align: center;
             break-inside: avoid;
             page-break-inside: avoid;
+          }
+          .status-badge {
+            display: none !important;
           }
         }
       `}</style>
