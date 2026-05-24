@@ -303,6 +303,17 @@ export function QuotationDetail() {
           }
 
           
+
+          @media print and (max-width: 148mm) {
+            #quotation-document {
+              transform: scale(0.71) !important;
+              transform-origin: top left !important;
+              width: 140.85% !important;
+              max-width: none !important;
+              margin: 0 !important;
+            }
+          }
+
           .status-badge {
             display: none !important;
           }
