@@ -155,7 +155,7 @@ export function QuotationDetail() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', columnGap: 20, rowGap: 6, fontSize: 42, marginTop: 22 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', columnGap: 14, rowGap: 4, fontSize: 40, marginTop: 18 }}>
               <div>Establecimiento:</div><div>SURTIMAX</div>
               <div>RUC / C.I.:</div><div>210020260001</div>
               <div>Dirección:</div><div>QUITO</div>
