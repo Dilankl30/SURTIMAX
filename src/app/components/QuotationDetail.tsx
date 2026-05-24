@@ -129,7 +129,7 @@ export function QuotationDetail() {
       </div>
 
       {/* Document */}
-      <div className="quotation-print-root">
+      <div className="quotation-print-root format-a5-print">
       <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 980, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 16 }}>
 
         <div className="print-keep" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, alignItems: 'start' }}>
@@ -138,11 +138,11 @@ export function QuotationDetail() {
             <div style={{ display: 'flex', gap: 26, fontSize: 16, marginLeft: 10, marginTop: 2 }}>
               <span>AMBIENTE</span><span>PRODUCCIÓN</span>
             </div>
-            <div style={{ marginTop: 28, marginLeft: 12, fontSize: 36 }}><strong>No. Prefactura:</strong> {generatedPrefacturaNumber}</div>
+            <div style={{ marginTop: 16, marginLeft: 8, fontSize: 18, fontWeight: 700 }}><strong>No. Prefactura:</strong> {generatedPrefacturaNumber}</div>
           </div>
 
           <div>
-            <h1 style={{ margin: 0, fontSize: 22, letterSpacing: 0.2, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
+            <h1 style={{ margin: 0, fontSize: 20, letterSpacing: 0.2, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
             <div style={{ fontSize: 14, lineHeight: 1.35, marginTop: 8 }}>
               <div>RUC: 210020260001</div>
               <div>Dirección: QUITO</div>
@@ -196,40 +196,6 @@ export function QuotationDetail() {
           )}
         </div>
 
-        <div className="print-keep no-print-client" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <strong style={{ fontSize: 14, letterSpacing: 1 }}>INFORMACIÓN DEL CLIENTE:</strong>
-            {editingClient ? (
-              <div className="no-print" style={{ display: 'flex', gap: 8 }}>
-                <button onClick={handleSaveClient} style={miniSaveBtn}><Save size={13} /> Guardar</button>
-                <button onClick={() => { setEditingClient(false); setClientEditError(''); }} style={miniCancelBtn}><X size={13} /> Cancelar</button>
-              </div>
-            ) : (
-              <button className="no-print" onClick={() => setEditingClient(true)} style={miniEditBtn}><Edit2 size={13} /> Editar datos del cliente</button>
-            )}
-          </div>
-
-          {editingClient ? (
-            <div className="no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <ClientEditField label="Nombre / Razón Social" value={clientDraft.clientName} onChange={v => handleClientDraftChange('clientName', v)} />
-              <ClientEditField label="Teléfono" value={clientDraft.clientPhone} onChange={v => handleClientDraftChange('clientPhone', v)} />
-              <ClientEditField label="RUC / C.I." value={clientDraft.clientCedula} onChange={v => handleClientDraftChange('clientCedula', v)} />
-              <ClientEditField label="Dirección" value={clientDraft.clientAddress} onChange={v => handleClientDraftChange('clientAddress', v)} />
-              <div style={{ gridColumn: '1 / -1' }}>
-                <ClientEditField label="Correo" value={clientDraft.clientEmail ?? ''} onChange={v => handleClientDraftChange('clientEmail', v)} type="email" />
-              </div>
-              {clientEditError ? <div style={{ gridColumn: '1 / -1', color: '#B71C1C', fontSize: 12 }}>{clientEditError}</div> : null}
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <ClientRow label="Nombre / Razón Social" value={quote.clientName} />
-              <ClientRow label="Teléfono" value={quote.clientPhone} />
-              <ClientRow label="RUC / C.I." value={quote.clientCedula} />
-              <ClientRow label="Dirección" value={quote.clientAddress} />
-              <div style={{ gridColumn: '1 / -1' }}><ClientRow label="Correo" value={quote.clientEmail || '-'} /></div>
-            </div>
-          )}
-        </div>
 
         <div style={{ marginTop: 14 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
@@ -305,7 +271,7 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: auto; margin: 6mm; }
+          @page { size: A4 portrait; margin: 10mm; }
           .quotation-print-root { position: static !important; width: auto !important; }
           #quotation-document {
             border: none !important;
@@ -344,9 +310,7 @@ export function QuotationDetail() {
             page-break-inside: avoid;
           }
 
-          @page {
-            size: auto;
-          }
+          
           @media print and (max-width: 148mm) {
             #quotation-document {
               padding: 4mm !important;
