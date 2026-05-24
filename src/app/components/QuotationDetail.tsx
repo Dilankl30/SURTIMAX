@@ -134,7 +134,7 @@ export function QuotationDetail() {
 
         <div className="print-keep invoice-section" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, alignItems: 'start' }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 140, objectFit: 'contain', marginBottom: 4 }} />
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 170, width: '100%', maxWidth: 340, objectFit: 'contain', objectPosition: 'left center', marginBottom: 2 }} />
             <div style={{ marginTop: 8, marginLeft: 8, fontSize: 18, fontWeight: 700 }}><strong>No. Prefactura:</strong> {generatedPrefacturaNumber}</div>
           </div>
 
