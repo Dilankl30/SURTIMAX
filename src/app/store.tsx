@@ -142,6 +142,24 @@ function computeFinancials(items: QuotationItem[], discount: number) {
 
 const INITIAL_QUOTATIONS: Quotation[] = [];
 
+
+function mergeQuotationItems(items: QuotationItem[]): QuotationItem[] {
+  const merged = new Map<string, QuotationItem>();
+
+  items.forEach(item => {
+    const key = `${item.code}__${item.description}__${item.unitPrice}`;
+    const existing = merged.get(key);
+    if (existing) {
+      existing.quantity += item.quantity;
+      return;
+    }
+    merged.set(key, { ...item });
+  });
+
+  return Array.from(merged.values());
+}
+
+
 const INITIAL_NOTIFICATIONS: AppNotification[] = [];
 
 
@@ -371,7 +389,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const createQuotation = useCallback((items: QuotationItem[], discount = 0, clientData?: QuotationClientData) => {
     if (!currentUser) return;
-    const totalCotizado = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+    const mergedItems = mergeQuotationItems(items);
+    const totalCotizado = mergedItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
     const subtotal = totalCotizado / 1.15;
     const iva = totalCotizado - subtotal;
     const finalTotal = totalCotizado - discount;
@@ -396,7 +415,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clientAddress: quoteClient.clientAddress,
       clientPhone: quoteClient.clientPhone,
       clientEmail: quoteClient.clientEmail,
-      items, totalCotizado, subtotal, iva, discount, finalTotal,
+      items: mergedItems, totalCotizado, subtotal, iva, discount, finalTotal,
       status: 'pending',
     };
 
