@@ -258,29 +258,41 @@ export function QuotationDetail() {
 
       <style>{`
         @media print {
+          :root {
+            --print-scale: 1;
+            --print-top-padding: 10px;
+            --print-page-margin: 4mm;
+          }
+
+          @page { margin: var(--print-page-margin); }
+
           body * { visibility: hidden !important; }
           .quotation-print-root, .quotation-print-root * { visibility: visible !important; }
           .quotation-print-root { position: static !important; width: 100% !important; margin: 0 !important; }
           .no-print { display: none !important; }
           .only-print { display: inline !important; }
           body { background: white !important; }
+
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
           #quotation-document { box-shadow: none !important; border: none !important; border-radius: 0 !important; background: #fff !important; }
           #quotation-document [style*="background"],
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { margin: 4mm 4mm 4mm 4mm; }
+
           #quotation-document {
             border: none !important;
-            width: 100% !important;
-            max-width: 980px !important;
+            width: calc(100% / var(--print-scale)) !important;
+            max-width: none !important;
             margin: 0 auto !important;
             height: auto !important;
             position: relative;
-            padding: 10px 16px 16px 16px !important;
+            padding: var(--print-top-padding) 16px 16px 16px !important;
             font-size: inherit !important;
+            transform: scale(var(--print-scale)) !important;
+            transform-origin: top center !important;
           }
+
           #quotation-document table {
             break-inside: auto !important;
             page-break-inside: auto !important;
@@ -302,15 +314,9 @@ export function QuotationDetail() {
             page-break-inside: avoid;
           }
 
-          
-
           @media print and (max-width: 148mm) {
-            #quotation-document {
-              transform: scale(0.71) !important;
-              transform-origin: top left !important;
-              width: 140.85% !important;
-              max-width: none !important;
-              margin: 0 !important;
+            :root {
+              --print-scale: 0.707;
             }
           }
 
