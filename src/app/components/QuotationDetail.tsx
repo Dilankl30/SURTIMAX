@@ -270,7 +270,7 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { margin: 0; }
+          @page { margin: 4mm 4mm 4mm 4mm; }
           #quotation-document {
             border: none !important;
             width: 100% !important;
@@ -278,7 +278,7 @@ export function QuotationDetail() {
             margin: 0 auto !important;
             height: auto !important;
             position: relative;
-            padding: 16px !important;
+            padding: 10px 16px 16px 16px !important;
             font-size: inherit !important;
           }
           #quotation-document table {
