@@ -26,7 +26,7 @@ export function Header() {
 
           {/* Logo */}
           <button onClick={() => nav('catalog')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, minWidth: 0 }}>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: isMobile ? 30 : 44, objectFit: 'contain', filter: 'brightness(0) invert(1)', maxWidth: isMobile ? 96 : 170, width: '100%' }} />
+            <img src={logoImg} alt="SURTIMAX" style={{ height: isMobile ? 36 : 56, objectFit: 'contain', maxWidth: isMobile ? 140 : 260, width: '100%' }} />
           </button>
 
           {/* Desktop Nav */}
