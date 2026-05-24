@@ -196,41 +196,6 @@ export function QuotationDetail() {
           )}
         </div>
 
-        <div className="print-keep no-print-client" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <strong style={{ fontSize: 14, letterSpacing: 1 }}>INFORMACIÓN DEL CLIENTE:</strong>
-            {editingClient ? (
-              <div className="no-print" style={{ display: 'flex', gap: 8 }}>
-                <button onClick={handleSaveClient} style={miniSaveBtn}><Save size={13} /> Guardar</button>
-                <button onClick={() => { setEditingClient(false); setClientEditError(''); }} style={miniCancelBtn}><X size={13} /> Cancelar</button>
-              </div>
-            ) : (
-              <button className="no-print" onClick={() => setEditingClient(true)} style={miniEditBtn}><Edit2 size={13} /> Editar datos del cliente</button>
-            )}
-          </div>
-
-          {editingClient ? (
-            <div className="no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <ClientEditField label="Nombre / Razón Social" value={clientDraft.clientName} onChange={v => handleClientDraftChange('clientName', v)} />
-              <ClientEditField label="Teléfono" value={clientDraft.clientPhone} onChange={v => handleClientDraftChange('clientPhone', v)} />
-              <ClientEditField label="RUC / C.I." value={clientDraft.clientCedula} onChange={v => handleClientDraftChange('clientCedula', v)} />
-              <ClientEditField label="Dirección" value={clientDraft.clientAddress} onChange={v => handleClientDraftChange('clientAddress', v)} />
-              <div style={{ gridColumn: '1 / -1' }}>
-                <ClientEditField label="Correo" value={clientDraft.clientEmail ?? ''} onChange={v => handleClientDraftChange('clientEmail', v)} type="email" />
-              </div>
-              {clientEditError ? <div style={{ gridColumn: '1 / -1', color: '#B71C1C', fontSize: 12 }}>{clientEditError}</div> : null}
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <ClientRow label="Nombre / Razón Social" value={quote.clientName} />
-              <ClientRow label="Teléfono" value={quote.clientPhone} />
-              <ClientRow label="RUC / C.I." value={quote.clientCedula} />
-              <ClientRow label="Dirección" value={quote.clientAddress} />
-              <div style={{ gridColumn: '1 / -1' }}><ClientRow label="Correo" value={quote.clientEmail || '-'} /></div>
-            </div>
-          )}
-        </div>
-
         <div style={{ marginTop: 14 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
@@ -275,7 +240,8 @@ export function QuotationDetail() {
           </div>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 10, fontSize: 10, lineHeight: 1.35, padding: '0 4px' }}>
+        <div className="print-keep print-footer-block" style={{ marginTop: 10 }}>
+        <div className="print-keep" style={{ marginTop: 0, fontSize: 10, lineHeight: 1.35, padding: '0 4px' }}>
           Debo y pagaré al vencimiento incondicionalmente en esta ciudad o en el lugar que se me reconvenga a la orden de DISTRIBUIDORA Y COMERCIALIZADORA SURTIMAX SA la suma de dinero indicada en el "VALOR TOTAL" de este documento. En caso de mora pagaré la tasa de interés máxima vigente a la fecha de vencimiento.
         </div>
 
@@ -287,7 +253,7 @@ export function QuotationDetail() {
         <div className="print-keep" style={{ marginTop: 12, fontSize: 9, lineHeight: 1.35, padding: '0 4px' }}>
           Cordiales y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
         </div>
-      </div>
+        </div>
       </div>
 
       <style>{`
@@ -334,26 +300,21 @@ export function QuotationDetail() {
             break-inside: avoid;
             page-break-inside: avoid;
           }
-          #quotation-document .signature-block {
-            position: absolute;
-            bottom: 6mm;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
 
-          @page {
-            size: auto;
+          #quotation-document .print-footer-block {
+            margin-top: 8px;
           }
           @media print and (max-width: 148mm) {
             #quotation-document {
-              padding: 4mm !important;
-              font-size: 78% !important;
+              padding: 3mm !important;
+              font-size: 76% !important;
             }
-            #quotation-document .filler-row td { height: 40px !important; }
+            #quotation-document .filler-row td { height: 20px !important; }
+            #quotation-document .print-footer-block {
+              margin-top: 6px !important;
+            }
           }
+
           .status-badge {
             display: none !important;
           }
