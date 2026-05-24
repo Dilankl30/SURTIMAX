@@ -3,7 +3,7 @@ import { ShoppingCart, Bell, User, LogOut, Menu, X, Package, ClipboardList, Layo
 import { useStore } from '../store';
 import { useIsMobile } from './ui/use-mobile';
 import type { AppNotification } from '../store';
-import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
+import logoImg from '../../imports/image.png';
 
 export function Header() {
   const { view, setView, cart, setCartOpen, cartOpen, currentUser, logout, setAuthOpen, notifications } = useStore();
