@@ -42,6 +42,10 @@ export function QuotationDetail() {
   const iva = totalCotizado - subtotal;
   const finalTotal = totalCotizado - discount;
   const emissionDate = quote.date && !Number.isNaN(new Date(quote.date).getTime()) ? quote.date : new Date().toISOString().slice(0, 10);
+  const generatedPrefacturaNumber = quote.number?.trim() ? quote.number : `COT-${new Date(emissionDate).toISOString().slice(0, 10).replace(/-/g, '')}-${String(quote.id).slice(-4).padStart(4, '0')}`;
+  const generatedClientCode = quote.clientCedula?.trim()
+    ? `C${quote.clientCedula.replace(/[^0-9A-Za-z]/g, '').slice(0, 8).padEnd(8, '0')}-${String(quote.id).slice(-3).padStart(3, '0')}`
+    : `C${String(quote.id).slice(-8).padStart(8, '0')}-${String(quote.id).slice(-3).padStart(3, '0')}`;
 
   const handleSaveDiscount = () => {
     const d = Math.max(0, parseFloat(tempDiscount) || 0);
@@ -134,7 +138,7 @@ export function QuotationDetail() {
             <div style={{ display: 'flex', gap: 26, fontSize: 16, marginLeft: 10, marginTop: 2 }}>
               <span>AMBIENTE</span><span>PRODUCCIÓN</span>
             </div>
-            <div style={{ marginTop: 28, marginLeft: 12, fontSize: 36 }}><strong>No. Prefactura:</strong></div>
+            <div style={{ marginTop: 28, marginLeft: 12, fontSize: 36 }}><strong>No. Prefactura:</strong> {generatedPrefacturaNumber}</div>
           </div>
 
           <div>
@@ -146,21 +150,13 @@ export function QuotationDetail() {
               <div>Email: GQ_SurtiMax@outlook.com</div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 40, alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 24, alignItems: 'start' }}>
               <div />
               <div style={{ fontSize: 12, lineHeight: 1.45 }}>
                 <div style={{ fontWeight: 700 }}>REGIMEN GENERAL:</div>
-                <div>Código Cliente:&nbsp; C01302868-005</div>
+                <div>Código Cliente:&nbsp; {generatedClientCode}</div>
                 <div>Fecha Emisión:&nbsp; {new Date(emissionDate).toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
               </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', columnGap: 8, rowGap: 3, fontSize: 10, marginTop: 10 }}>
-              <div>Establecimiento:</div><div>SURTIMAX</div>
-              <div>RUC / C.I.:</div><div>210020260001</div>
-              <div>Dirección:</div><div>QUITO</div>
-              <div>Teléfono:</div><div>0980320848</div>
-              <div>Email:</div><div>GQ_SurtiMax@outlook.com</div>
             </div>
           </div>
         </div>
@@ -200,8 +196,43 @@ export function QuotationDetail() {
           )}
         </div>
 
+        <div className="print-keep no-print-client" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <strong style={{ fontSize: 14, letterSpacing: 1 }}>INFORMACIÓN DEL CLIENTE:</strong>
+            {editingClient ? (
+              <div className="no-print" style={{ display: 'flex', gap: 8 }}>
+                <button onClick={handleSaveClient} style={miniSaveBtn}><Save size={13} /> Guardar</button>
+                <button onClick={() => { setEditingClient(false); setClientEditError(''); }} style={miniCancelBtn}><X size={13} /> Cancelar</button>
+              </div>
+            ) : (
+              <button className="no-print" onClick={() => setEditingClient(true)} style={miniEditBtn}><Edit2 size={13} /> Editar datos del cliente</button>
+            )}
+          </div>
+
+          {editingClient ? (
+            <div className="no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <ClientEditField label="Nombre / Razón Social" value={clientDraft.clientName} onChange={v => handleClientDraftChange('clientName', v)} />
+              <ClientEditField label="Teléfono" value={clientDraft.clientPhone} onChange={v => handleClientDraftChange('clientPhone', v)} />
+              <ClientEditField label="RUC / C.I." value={clientDraft.clientCedula} onChange={v => handleClientDraftChange('clientCedula', v)} />
+              <ClientEditField label="Dirección" value={clientDraft.clientAddress} onChange={v => handleClientDraftChange('clientAddress', v)} />
+              <div style={{ gridColumn: '1 / -1' }}>
+                <ClientEditField label="Correo" value={clientDraft.clientEmail ?? ''} onChange={v => handleClientDraftChange('clientEmail', v)} type="email" />
+              </div>
+              {clientEditError ? <div style={{ gridColumn: '1 / -1', color: '#B71C1C', fontSize: 12 }}>{clientEditError}</div> : null}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <ClientRow label="Nombre / Razón Social" value={quote.clientName} />
+              <ClientRow label="Teléfono" value={quote.clientPhone} />
+              <ClientRow label="RUC / C.I." value={quote.clientCedula} />
+              <ClientRow label="Dirección" value={quote.clientAddress} />
+              <div style={{ gridColumn: '1 / -1' }}><ClientRow label="Correo" value={quote.clientEmail || '-'} /></div>
+            </div>
+          )}
+        </div>
+
         <div style={{ marginTop: 14 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
               <tr>
                 <th style={bigTh}>Código</th>
@@ -227,13 +258,13 @@ export function QuotationDetail() {
                   <td style={bigTd}>{(item.quantity * item.unitPrice).toFixed(2).replace('.', ',')}</td>
                 </tr>
               ))}
-              <tr className="filler-row"><td colSpan={8} style={{ ...bigTd, height: 300, borderTop: 'none' }} /></tr>
+              <tr className="filler-row"><td colSpan={8} style={{ ...bigTd, height: 170, borderTop: 'none' }} /></tr>
             </tbody>
           </table>
         </div>
 
         <div className="print-keep" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 300px', gap: 10 }}>
-          <div style={{ border: '1px solid #000', minHeight: 94, padding: '8px 10px', fontSize: 13 }}>OBSERVACION:</div>
+          <div style={{ border: '1px solid #000', minHeight: 94, padding: '8px 10px', fontSize: 11 }}>OBSERVACION:</div>
           <div style={{ border: '1px solid #000', padding: '8px 10px', fontSize: 12 }}>
             <div style={sumRow}><span>SUBTOTAL</span><span>{subtotal.toFixed(2).replace('.', ',')}</span></div>
             <div style={sumRow}><span>DESCUENTO</span><span>{discount.toFixed(2).replace('.', ',')}</span></div>
@@ -269,23 +300,22 @@ export function QuotationDetail() {
           .no-print-client { display: none !important; }
           body { background: white !important; }
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
-          #quotation-document { box-shadow: none !important; border: 1px solid #000 !important; border-radius: 0 !important; background: #fff !important; }
+          #quotation-document { box-shadow: none !important; border: none !important; border-radius: 0 !important; background: #fff !important; }
           #quotation-document [style*="background"],
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: A4 portrait; margin: 8mm; }
+          @page { size: auto; margin: 6mm; }
           .quotation-print-root { position: static !important; width: auto !important; }
           #quotation-document {
-            zoom: 1 !important;
-            border: 1px solid #000 !important;
+            border: none !important;
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 auto !important;
             height: auto !important;
             position: relative;
-            padding: 10px !important;
-            font-size: 92% !important;
+            padding: 8px !important;
+            font-size: 90% !important;
           }
           #quotation-document > div {
             break-inside: avoid;
@@ -313,6 +343,17 @@ export function QuotationDetail() {
             break-inside: avoid;
             page-break-inside: avoid;
           }
+
+          @page {
+            size: auto;
+          }
+          @media print and (max-width: 148mm) {
+            #quotation-document {
+              padding: 4mm !important;
+              font-size: 78% !important;
+            }
+            #quotation-document .filler-row td { height: 40px !important; }
+          }
           .status-badge {
             display: none !important;
           }
@@ -331,7 +372,7 @@ function normalizeWhatsAppNumber(phone: string) {
 
 function ClientRow({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ fontSize: 13 }}>
+    <div style={{ fontSize: 11 }}>
       <span style={{ color: '#000', opacity: 0.75 }}>{label}: </span>
       <strong style={{ color: '#000' }}>{value}</strong>
     </div>
@@ -359,7 +400,7 @@ function TotalRow({ label, value, highlight }: { label: string; value: any; high
 
 const bigTh: React.CSSProperties = { border: '1px solid #000', padding: '6px 8px', textAlign: 'center', fontWeight: 700 };
 const bigThDesc: React.CSSProperties = { ...bigTh, textAlign: 'center' };
-const bigTd: React.CSSProperties = { borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000', padding: '5px 8px', textAlign: 'center', verticalAlign: 'top' };
+const bigTd: React.CSSProperties = { borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000', padding: '3px 5px', textAlign: 'center', verticalAlign: 'top' };
 const sumRow: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr auto', marginBottom: 8 };
 
 const miniEditBtn: React.CSSProperties = { background: '#E3F2FD', border: '1px solid #BBDEFB', color: '#000', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
