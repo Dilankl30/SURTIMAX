@@ -126,151 +126,102 @@ export function QuotationDetail() {
 
       {/* Document */}
       <div className="quotation-print-root">
-      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 900, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 1040, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 14 }}>
 
-        {/* Header */}
-        <div className="print-keep" style={{ padding: '16px 18px', borderBottom: '2px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+        <div className="print-keep" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 14, alignItems: 'start' }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 86, objectFit: 'contain', marginBottom: 6 }} />
-            <div style={{ fontSize: 10, color: '#000', lineHeight: 1.5 }}>
-              <div><strong style={{ color: '#000' }}>DIRECCIÓN:</strong> QUITO</div>
-              <div><strong style={{ color: '#000' }}>CIUDAD:</strong> QUITO</div>
-              <div><strong style={{ color: '#000' }}>CI O RUC:</strong> 2100282249001</div>
-              <div><strong style={{ color: '#000' }}>TLF:</strong> 0958737004</div>
-              <div><strong style={{ color: '#000' }}>EMAIL:</strong> GQ_SurtiMax@outlook.com</div>
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 94, objectFit: 'contain', marginBottom: 10 }} />
+            <div style={{ display: 'flex', gap: 26, fontSize: 34, marginLeft: 16, marginTop: 4 }}>
+              <span>AMBIENTE</span><span>PRODUCCIÓN</span>
             </div>
+            <div style={{ marginTop: 46, marginLeft: 20, fontSize: 40 }}><strong>No. Prefactura:</strong></div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <h1 style={{ color: '#000', fontSize: 24, fontWeight: 800, margin: '0 0 8px', letterSpacing: 1 }}>PRE-FACTURA</h1>
-            <div style={{ fontSize: 11, color: '#000', lineHeight: 1.5 }}>
-              <div><strong>No. Prefactura:</strong> <span style={{ color: '#1A237E', fontWeight: 700 }}>{quote.number}</span></div>
-              <div><strong>Fecha:</strong> {new Date(emissionDate).toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+
+          <div>
+            <h1 style={{ margin: 0, fontSize: 56, letterSpacing: 1, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
+            <div style={{ fontSize: 44, lineHeight: 1.4, marginTop: 8 }}>
+              <div>RUC: 210020260001</div>
+              <div>Dirección: QUITO</div>
+              <div>Teléfono: 0980320848</div>
+              <div>Email: GQ_SurtiMax@outlook.com</div>
             </div>
-            <div className="status-badge" style={{ marginTop: 10 }}>
-              <span style={{ padding: '4px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, backgroundColor: quote.status === 'delivered' ? '#E8F5E9' : '#FFF3E0', color: quote.status === 'delivered' ? '#2E7D32' : '#E65100' }}>
-                {quote.status === 'delivered' ? '✓ ENTREGADO' : '⏳ PENDIENTE'}
-              </span>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 38, alignItems: 'start' }}>
+              <div />
+              <div style={{ fontSize: 42, lineHeight: 1.5 }}>
+                <div style={{ fontWeight: 700 }}>REGIMEN GENERAL:</div>
+                <div>Código Cliente:&nbsp; C01302868-005</div>
+                <div>Fecha Emisión:&nbsp; {new Date(emissionDate).toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', columnGap: 20, rowGap: 6, fontSize: 42, marginTop: 22 }}>
+              <div>Establecimiento:</div><div>SURTIMAX</div>
+              <div>RUC / C.I.:</div><div>210020260001</div>
+              <div>Dirección:</div><div>QUITO</div>
+              <div>Teléfono:</div><div>0980320848</div>
+              <div>Email:</div><div>GQ_SurtiMax@outlook.com</div>
             </div>
           </div>
         </div>
 
-        {/* Client info */}
-        <div className="print-keep" style={{ padding: '10px 18px', backgroundColor: '#fff', borderBottom: '2px solid #000' }}>
-          <h3 style={{ margin: '0 0 8px', color: '#000', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #0D47A1', paddingBottom: 3, display: 'inline-block' }}>
-            Información del cliente:
-          </h3>
-          {currentUser?.isAdmin && (
-            <div className="no-print" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {editingClient ? (
-                <>
-                  <button onClick={handleSaveClient} style={miniSaveBtn}><Save size={13} /> Guardar datos</button>
-                  <button onClick={() => { setEditingClient(false); setClientEditError(''); }} style={miniCancelBtn}><X size={13} /> Cancelar</button>
-                </>
-              ) : (
-                <button onClick={() => setEditingClient(true)} style={miniEditBtn}><Edit2 size={13} /> Editar datos del cliente</button>
-              )}
-            </div>
-          )}
-          {editingClient ? (
-            <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px 14px', fontSize: 13 }}>
-              <ClientEditField label="Nombre / Razón Social *" value={clientDraft.clientName} onChange={value => handleClientDraftChange('clientName', value)} />
-              <ClientEditField label="Teléfono *" value={clientDraft.clientPhone} onChange={value => handleClientDraftChange('clientPhone', value)} />
-              <ClientEditField label="R.U.C. / C.I. *" value={clientDraft.clientCedula} onChange={value => handleClientDraftChange('clientCedula', value)} />
-              <ClientEditField label="Dirección *" value={clientDraft.clientAddress} onChange={value => handleClientDraftChange('clientAddress', value)} />
-              <ClientEditField label="Correo electrónico *" value={clientDraft.clientEmail ?? ''} onChange={value => handleClientDraftChange('clientEmail', value)} type="email" />
-              {clientEditError && <div style={{ gridColumn: '1 / -1', color: '#C62828', backgroundColor: '#FFEBEE', border: '1px solid #FFCDD2', borderRadius: 8, padding: '8px 10px', fontSize: 12 }}>⚠️ {clientEditError}</div>}
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px 14px', fontSize: 11 }}>
-              <ClientRow label="Nombre / Razón Social" value={quote.clientName} />
-              <ClientRow label="Teléfono" value={quote.clientPhone} />
-              <ClientRow label="R.U.C. / C.I." value={quote.clientCedula} />
-              <ClientRow label="Dirección" value={quote.clientAddress} />
-              {quote.clientEmail && <ClientRow label="Correo" value={quote.clientEmail} />}
-            </div>
-          )}
-        </div>
-
-        {/* Items table */}
-        <div style={{ padding: '0 18px 10px' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10 }}>
-              <thead>
-                <tr style={{ backgroundColor: '#fff', color: '#000', borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
-                  <th style={th}>CÓDIGO</th>
-                  <th style={th}>CANTIDAD</th>
-                  <th style={{ ...th, textAlign: 'left', paddingLeft: 16 }}>DESCRIPCIÓN DEL ÍTEM</th>
-                  <th style={th}>P. UNITARIO</th>
-                  <th style={th}>SUBTOTAL</th>
+        <div style={{ marginTop: 14 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 34 }}>
+            <thead>
+              <tr>
+                <th style={bigTh}>Código</th>
+                <th style={bigThDesc}>Descripción</th>
+                <th style={bigTh}>Cant.</th>
+                <th style={bigTh}>Precio</th>
+                <th style={bigTh}>% Dscto</th>
+                <th style={bigTh}>IVA</th>
+                <th style={bigTh}>Subtotal</th>
+                <th style={bigTh}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {quote.items.map((item, i) => (
+                <tr key={i}>
+                  <td style={bigTd}>{item.code}</td>
+                  <td style={{ ...bigTd, textAlign: 'left' }}>{item.description}</td>
+                  <td style={bigTd}>{item.quantity}</td>
+                  <td style={bigTd}>${item.unitPrice.toFixed(2)}</td>
+                  <td style={bigTd}>{discount > 0 ? `${((discount / totalCotizado) * 100).toFixed(2)}%` : '0,00%'}</td>
+                  <td style={bigTd}>15%</td>
+                  <td style={bigTd}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                  <td style={bigTd}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {quote.items.map((item, i) => (
-                  <tr key={i} style={{ backgroundColor: 'white', borderBottom: '1px solid #000' }}>
-                    <td style={tdC}><span style={{ backgroundColor: '#E3F2FD', color: '#1565C0', borderRadius: 4, padding: '1px 7px', fontSize: 11, fontWeight: 600 }}>{item.code}</span></td>
-                    <td style={tdC}>{item.quantity}</td>
-                    <td style={{ ...tdC, textAlign: 'left', paddingLeft: 16, fontWeight: 500, color: '#1A237E' }}>{item.description}</td>
-                    <td style={tdC}>${item.unitPrice.toFixed(2)}</td>
-                    <td style={{ ...tdC, fontWeight: 700, color: '#000' }}>${(item.quantity * item.unitPrice).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+              <tr><td colSpan={8} style={{ ...bigTd, height: 440, borderTop: 'none' }} /></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="print-keep" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 380px', gap: 10 }}>
+          <div style={{ border: '1px solid #000', minHeight: 90, padding: '8px 10px', fontSize: 36 }}>OBSERVACION:</div>
+          <div style={{ border: '1px solid #000', padding: '10px 14px', fontSize: 40 }}>
+            <div style={sumRow}><span>SUBTOTAL</span><span>${subtotal.toFixed(2)}</span></div>
+            <div style={sumRow}><span>DESCUENTO</span><span>${discount.toFixed(2)}</span></div>
+            <div style={sumRow}><span>SUBTOTAL 2</span><span>${(subtotal - discount).toFixed(2)}</span></div>
+            <div style={sumRow}><span>BASE IVA 15%</span><span>${(subtotal - discount).toFixed(2)}</span></div>
+            <div style={sumRow}><span>IVA 15%</span><span>${iva.toFixed(2)}</span></div>
+            <div style={{ ...sumRow, fontWeight: 700 }}><span>TOTAL</span><span>${finalTotal.toFixed(2)}</span></div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="print-keep" style={{ padding: '10px 18px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '2px solid #000', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ maxWidth: 280 }}>
-            <h4 style={{ color: '#000', margin: '0 0 4px', fontWeight: 700, fontSize: 10 }}>VALIDEZ Y CONDICIONES COMERCIALES:</h4>
-            <p style={{ color: '#000', margin: 0, fontSize: 9 }}>• Tiempo de entrega estimado: Según disponibilidad de inventario.</p>
-          </div>
-
-          <div style={{ minWidth: 280, width: 300, marginLeft: 'auto' }}>
-            <TotalRow label="SUBTOTAL:" value={`$${subtotal.toFixed(2)}`} />
-            <TotalRow label="I.V.A. 15%:" value={`$${iva.toFixed(2)}`} />
-            <TotalRow
-              label="DESCUENTO:"
-              value={
-                currentUser?.isAdmin ? (
-                  editingDiscount ? (
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                      <input
-                        type="number" value={tempDiscount}
-                        onChange={e => setTempDiscount(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleSaveDiscount()}
-                        style={{ width: 80, padding: '3px 7px', border: '2px solid #1976D2', borderRadius: 6, fontSize: 13, outline: 'none' }}
-                        autoFocus
-                      />
-                      <button onClick={handleSaveDiscount} style={{ background: '#388E3C', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 6, padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
-                        <Save size={13} />
-                      </button>
-                      <button onClick={() => setEditingDiscount(false)} style={{ background: '#EF5350', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 6, padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <button className="no-print" onClick={() => setEditingDiscount(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#000', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, fontSize: 13, padding: 0, justifySelf: 'end' }}>
-                        ${discount.toFixed(2)} <Edit2 size={12} style={{ color: '#1976D2' }} />
-                      </button>
-                      <span className="only-print" style={{ display: 'none' }}>${discount.toFixed(2)}</span>
-                    </>
-                  )
-                ) : `$${discount.toFixed(2)}`
-              }
-            />
-            <div style={{ height: 1, backgroundColor: '#E3F2FD', margin: '8px 0' }} />
-            <TotalRow label="TOTAL PREFACTURA:" value={`$${finalTotal.toFixed(2)}`} highlight />
-          </div>
+        <div className="print-keep" style={{ marginTop: 14, fontSize: 35, lineHeight: 1.35, padding: '0 4px' }}>
+          Debo y pagaré al vencimiento incondicionalmente en esta ciudad o en el lugar que se me reconvenga a la orden de DISTRIBUIDORA Y COMERCIALIZADORA SURTIMAX SA la suma de dinero indicada en el "VALOR TOTAL" de este documento.
         </div>
 
-        {/* Signature */}
-        <div className="print-keep signature-block" style={{ padding: '4px 18px 12px', textAlign: 'center' }}>
-          <div style={{ display: 'inline-block', borderTop: '2px solid #0D47A1', paddingTop: 8, minWidth: 150, color: '#000', fontSize: 11, letterSpacing: 0.8 }}>
-            RECIBÍ CONFORME
-          </div>
+        <div className="print-keep" style={{ marginTop: 28, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 36, fontSize: 36, textAlign: 'center' }}>
+          <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma autorizada</div></div>
+          <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma cliente</div></div>
         </div>
+
+        <div className="print-keep" style={{ marginTop: 18, fontSize: 32, lineHeight: 1.35, padding: '0 4px' }}>
+          Cordialsa y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
+        </div>
+      </div>
       </div>
       </div>
 
@@ -288,7 +239,7 @@ export function QuotationDetail() {
           #quotation-document [style*="background-color"] { background: #fff !important; background-color: #fff !important; }
           #quotation-document table, #quotation-document th, #quotation-document td, #quotation-document div, #quotation-document span, #quotation-document p, #quotation-document h1, #quotation-document h2, #quotation-document h3, #quotation-document h4 { border-color: #000 !important; }
           #quotation-document img { filter: grayscale(1) contrast(1.1); }
-          @page { size: A4 portrait; margin: 10mm; }
+          @page { size: A4 portrait; margin: 8mm; }
           #quotation-document {
             border: 1px solid #000 !important;
             width: 100% !important;
@@ -362,6 +313,12 @@ function TotalRow({ label, value, highlight }: { label: string; value: any; high
     </div>
   );
 }
+
+
+const bigTh: React.CSSProperties = { border: '1px solid #000', padding: '6px 8px', textAlign: 'center', fontWeight: 700 };
+const bigThDesc: React.CSSProperties = { ...bigTh, textAlign: 'center' };
+const bigTd: React.CSSProperties = { borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000', padding: '5px 8px', textAlign: 'center', verticalAlign: 'top' };
+const sumRow: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr auto', marginBottom: 8 };
 
 const miniEditBtn: React.CSSProperties = { background: '#E3F2FD', border: '1px solid #BBDEFB', color: '#000', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
 const miniSaveBtn: React.CSSProperties = { background: '#388E3C', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700 };
