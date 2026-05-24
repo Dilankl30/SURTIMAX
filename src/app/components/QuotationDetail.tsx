@@ -87,7 +87,7 @@ export function QuotationDetail() {
   const backView = currentUser?.isAdmin ? 'admin-quotes' : 'my-quotes';
 
   return (
-    <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: 1080, margin: '0 auto', padding: '24px 16px' }}>
 
       {/* Action bar */}
       <div className="no-print" style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -126,20 +126,20 @@ export function QuotationDetail() {
 
       {/* Document */}
       <div className="quotation-print-root">
-      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 1040, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 18 }}>
+      <div id="quotation-document" style={{ backgroundColor: 'white', borderRadius: 0, overflow: 'hidden', boxShadow: 'none', border: '1px solid #000', maxWidth: 980, margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', padding: 16 }}>
 
-        <div className="print-keep" style={{ display: 'grid', gridTemplateColumns: '330px 1fr', gap: 12, alignItems: 'start' }}>
+        <div className="print-keep" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, alignItems: 'start' }}>
           <div>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: 86, objectFit: 'contain', marginBottom: 8 }} />
-            <div style={{ display: 'flex', gap: 26, fontSize: 40, marginLeft: 6, marginTop: 2 }}>
+            <img src={logoImg} alt="SURTIMAX" style={{ height: 74, objectFit: 'contain', marginBottom: 8 }} />
+            <div style={{ display: 'flex', gap: 26, fontSize: 16, marginLeft: 10, marginTop: 2 }}>
               <span>AMBIENTE</span><span>PRODUCCIÓN</span>
             </div>
-            <div style={{ marginTop: 36, marginLeft: 16, fontSize: 56 }}><strong>No. Prefactura:</strong></div>
+            <div style={{ marginTop: 28, marginLeft: 12, fontSize: 36 }}><strong>No. Prefactura:</strong></div>
           </div>
 
           <div>
-            <h1 style={{ margin: 0, fontSize: 58, letterSpacing: 0.2, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
-            <div style={{ fontSize: 46, lineHeight: 1.3, marginTop: 8 }}>
+            <h1 style={{ margin: 0, fontSize: 22, letterSpacing: 0.2, fontWeight: 800 }}>DISTRIBUIDORA & COMERCIALIZADORA</h1>
+            <div style={{ fontSize: 14, lineHeight: 1.35, marginTop: 8 }}>
               <div>RUC: 210020260001</div>
               <div>Dirección: QUITO</div>
               <div>Teléfono: 0980320848</div>
@@ -148,14 +148,14 @@ export function QuotationDetail() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 40, alignItems: 'start' }}>
               <div />
-              <div style={{ fontSize: 38, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 12, lineHeight: 1.45 }}>
                 <div style={{ fontWeight: 700 }}>REGIMEN GENERAL:</div>
                 <div>Código Cliente:&nbsp; C01302868-005</div>
                 <div>Fecha Emisión:&nbsp; {new Date(emissionDate).toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', columnGap: 10, rowGap: 4, fontSize: 18, marginTop: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', columnGap: 8, rowGap: 3, fontSize: 10, marginTop: 10 }}>
               <div>Establecimiento:</div><div>SURTIMAX</div>
               <div>RUC / C.I.:</div><div>210020260001</div>
               <div>Dirección:</div><div>QUITO</div>
@@ -165,7 +165,7 @@ export function QuotationDetail() {
           </div>
         </div>
 
-        <div className="print-keep" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
+        <div className="print-keep no-print-client" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', marginTop: 12, padding: '10px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <strong style={{ fontSize: 14, letterSpacing: 1 }}>INFORMACIÓN DEL CLIENTE:</strong>
             {editingClient ? (
@@ -201,7 +201,7 @@ export function QuotationDetail() {
         </div>
 
         <div style={{ marginTop: 14 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 34 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr>
                 <th style={bigTh}>Código</th>
@@ -227,14 +227,14 @@ export function QuotationDetail() {
                   <td style={bigTd}>{(item.quantity * item.unitPrice).toFixed(2).replace('.', ',')}</td>
                 </tr>
               ))}
-              <tr className="filler-row"><td colSpan={8} style={{ ...bigTd, height: 430, borderTop: 'none' }} /></tr>
+              <tr className="filler-row"><td colSpan={8} style={{ ...bigTd, height: 300, borderTop: 'none' }} /></tr>
             </tbody>
           </table>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 380px', gap: 10 }}>
-          <div style={{ border: '1px solid #000', minHeight: 94, padding: '8px 10px', fontSize: 34 }}>OBSERVACION:</div>
-          <div style={{ border: '1px solid #000', padding: '10px 14px', fontSize: 38 }}>
+        <div className="print-keep" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 300px', gap: 10 }}>
+          <div style={{ border: '1px solid #000', minHeight: 94, padding: '8px 10px', fontSize: 13 }}>OBSERVACION:</div>
+          <div style={{ border: '1px solid #000', padding: '8px 10px', fontSize: 12 }}>
             <div style={sumRow}><span>SUBTOTAL</span><span>{subtotal.toFixed(2).replace('.', ',')}</span></div>
             <div style={sumRow}><span>DESCUENTO</span><span>{discount.toFixed(2).replace('.', ',')}</span></div>
             <div style={sumRow}><span>SUBTOTAL 2</span><span>{(subtotal - discount).toFixed(2).replace('.', ',')}</span></div>
@@ -244,16 +244,16 @@ export function QuotationDetail() {
           </div>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 14, fontSize: 34, lineHeight: 1.35, padding: '0 4px' }}>
+        <div className="print-keep" style={{ marginTop: 10, fontSize: 10, lineHeight: 1.35, padding: '0 4px' }}>
           Debo y pagaré al vencimiento incondicionalmente en esta ciudad o en el lugar que se me reconvenga a la orden de DISTRIBUIDORA Y COMERCIALIZADORA SURTIMAX SA la suma de dinero indicada en el "VALOR TOTAL" de este documento. En caso de mora pagaré la tasa de interés máxima vigente a la fecha de vencimiento.
         </div>
 
-        <div className="print-keep" style={{ marginTop: 40, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30, fontSize: 14, textAlign: 'center' }}>
+        <div className="print-keep" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, fontSize: 11, textAlign: 'center' }}>
           <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma autorizada</div></div>
           <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma cliente</div></div>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 18, fontSize: 32, lineHeight: 1.35, padding: '0 4px' }}>
+        <div className="print-keep" style={{ marginTop: 12, fontSize: 9, lineHeight: 1.35, padding: '0 4px' }}>
           Cordiales y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
         </div>
       </div>
@@ -266,6 +266,7 @@ export function QuotationDetail() {
           .quotation-print-root { position: absolute; left: 10mm; top: 10mm; width: calc(100% - 20mm); }
           .no-print { display: none !important; }
           .only-print { display: inline !important; }
+          .no-print-client { display: none !important; }
           body { background: white !important; }
           #quotation-document, #quotation-document * { color: #000 !important; text-shadow: none !important; }
           #quotation-document { box-shadow: none !important; border: 1px solid #000 !important; border-radius: 0 !important; background: #fff !important; }
@@ -283,8 +284,8 @@ export function QuotationDetail() {
             margin: 0 auto !important;
             height: auto !important;
             position: relative;
-            padding: 16px !important;
-            font-size: 100% !important;
+            padding: 10px !important;
+            font-size: 92% !important;
           }
           #quotation-document > div {
             break-inside: avoid;
@@ -298,7 +299,7 @@ export function QuotationDetail() {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
-          #quotation-document .filler-row td { height: 250px !important; }
+          #quotation-document .filler-row td { height: 120px !important; }
           #quotation-document .print-keep {
             break-inside: avoid;
             page-break-inside: avoid;
@@ -330,7 +331,7 @@ function normalizeWhatsAppNumber(phone: string) {
 
 function ClientRow({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ fontSize: 34 }}>
+    <div style={{ fontSize: 13 }}>
       <span style={{ color: '#000', opacity: 0.75 }}>{label}: </span>
       <strong style={{ color: '#000' }}>{value}</strong>
     </div>
