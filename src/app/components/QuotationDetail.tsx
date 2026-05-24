@@ -277,6 +277,7 @@ export function QuotationDetail() {
           @page { size: A4 portrait; margin: 8mm; }
           .quotation-print-root { position: static !important; width: auto !important; }
           #quotation-document {
+            zoom: 1 !important;
             border: 1px solid #000 !important;
             width: 100% !important;
             max-width: 100% !important;
