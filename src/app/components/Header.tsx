@@ -3,7 +3,7 @@ import { ShoppingCart, Bell, User, LogOut, Menu, X, Package, ClipboardList, Layo
 import { useStore } from '../store';
 import { useIsMobile } from './ui/use-mobile';
 import type { AppNotification } from '../store';
-import logoImg from '../../imports/DAME_CON_EL_FONDO_DE_202605160147.jpeg';
+import logoImg from '../../imports/image.png';
 
 export function Header() {
   const { view, setView, cart, setCartOpen, cartOpen, currentUser, logout, setAuthOpen, notifications } = useStore();
@@ -26,7 +26,7 @@ export function Header() {
 
           {/* Logo */}
           <button onClick={() => nav('catalog')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, minWidth: 0 }}>
-            <img src={logoImg} alt="SURTIMAX" style={{ height: isMobile ? 30 : 44, objectFit: 'contain', filter: 'brightness(0) invert(1)', maxWidth: isMobile ? 96 : 170, width: '100%' }} />
+            <img src={logoImg} alt="SURTIMAX" style={{ height: isMobile ? 42 : 64, objectFit: 'contain', objectPosition: 'left center', maxWidth: isMobile ? 180 : 330, width: '100%' }} />
           </button>
 
           {/* Desktop Nav */}
