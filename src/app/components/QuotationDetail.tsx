@@ -238,12 +238,14 @@ export function QuotationDetail() {
           </div>
         </div>
 
-        <div className="print-keep signature-section" style={{ marginTop: 20, fontSize: 11, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: 280, maxWidth: '70%' }}><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>RECIBÍ CONFORME</div></div>
-        </div>
+        <div className="print-keep print-footer" style={{ marginTop: 14 }}>
+          <div className="signature-section" style={{ fontSize: 11, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: 280, maxWidth: '70%' }}><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>RECIBÍ CONFORME</div></div>
+          </div>
 
-        <div className="print-keep" style={{ marginTop: 12, fontSize: 9, lineHeight: 1.35, padding: '0 4px' }}>
-          Cordiales y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
+          <div style={{ marginTop: 12, fontSize: 9, lineHeight: 1.35, padding: '0 4px' }}>
+            SurtiMax y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
+          </div>
         </div>
       </div>
       </div>
@@ -270,7 +272,8 @@ export function QuotationDetail() {
 
           .invoice-section,
           .totals-section,
-          .signature-section {
+          .signature-section,
+          .print-footer {
             break-inside: avoid;
             page-break-inside: avoid;
           }
@@ -352,10 +355,13 @@ export function QuotationDetail() {
               grid-template-columns: 1fr 320px !important;
             }
 
-            #quotation-document .signature-section {
+            #quotation-document .print-footer {
               margin-top: auto !important;
               padding-top: 10mm !important;
               padding-bottom: 2mm !important;
+            }
+
+            #quotation-document .signature-section {
               width: 100% !important;
               justify-content: center !important;
             }
