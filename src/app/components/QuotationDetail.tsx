@@ -238,13 +238,8 @@ export function QuotationDetail() {
           </div>
         </div>
 
-        <div className="print-keep" style={{ marginTop: 10, fontSize: 10, lineHeight: 1.35, padding: '0 4px' }}>
-          Debo y pagaré al vencimiento incondicionalmente en esta ciudad o en el lugar que se me reconvenga a la orden de DISTRIBUIDORA Y COMERCIALIZADORA SURTIMAX SA la suma de dinero indicada en el "VALOR TOTAL" de este documento. En caso de mora pagaré la tasa de interés máxima vigente a la fecha de vencimiento.
-        </div>
-
-        <div className="print-keep signature-section" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, fontSize: 11, textAlign: 'center' }}>
-          <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma autorizada</div></div>
-          <div><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>Firma cliente</div></div>
+        <div className="print-keep signature-section" style={{ marginTop: 20, fontSize: 11, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: 280, maxWidth: '70%' }}><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>RECIBÍ CONFORME</div></div>
         </div>
 
         <div className="print-keep" style={{ marginTop: 12, fontSize: 9, lineHeight: 1.35, padding: '0 4px' }}>
@@ -327,8 +322,47 @@ export function QuotationDetail() {
 
           @media print and (max-width: 148mm) {
             :root {
-              --print-scale: 0.76;
-              --print-translate-y: -1mm;
+              --print-scale: 1;
+              --print-page-margin: 4mm;
+              --print-top-padding: 4mm;
+              --print-translate-y: 0mm;
+            }
+
+            #quotation-document {
+              min-height: calc(210mm - 8mm) !important;
+              padding: 4mm 5mm 5mm 5mm !important;
+              display: flex !important;
+              flex-direction: column !important;
+              font-size: 1.05em !important;
+            }
+
+            #quotation-document .invoice-section:first-of-type h1 {
+              font-size: 22px !important;
+            }
+
+            #quotation-document .invoice-section:first-of-type img {
+              height: 182px !important;
+            }
+
+            #quotation-document .invoice-table table {
+              font-size: 12px !important;
+            }
+
+            #quotation-document .totals-section {
+              grid-template-columns: 1fr 320px !important;
+            }
+
+            #quotation-document .signature-section {
+              margin-top: auto !important;
+              padding-top: 10mm !important;
+              padding-bottom: 2mm !important;
+              width: 100% !important;
+              justify-content: center !important;
+            }
+
+            #quotation-document .signature-section > div {
+              max-width: 58% !important;
+              width: 58% !important;
             }
           }
 
