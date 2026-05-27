@@ -239,11 +239,24 @@ export function QuotationDetail() {
         </div>
 
         <div className="print-keep print-footer" style={{ marginTop: 14 }}>
-          <div className="signature-section" style={{ fontSize: 11, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: 280, maxWidth: '70%' }}><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>RECIBÍ CONFORME</div></div>
+          <div
+            className="signature-section"
+            style={{
+              fontSize: 11,
+              textAlign: 'center',
+              display: 'flex',
+              justifyContent: 'center',
+              minHeight: '4.5cm',
+              alignItems: 'flex-end',
+              paddingTop: 8
+            }}
+          >
+            <div style={{ width: 320, maxWidth: '75%' }}>
+              <div style={{ borderTop: '2px solid #000', paddingTop: 8, textAlign: 'center' }}>RECIBÍ CONFORME</div>
+            </div>
           </div>
 
-          <div style={{ marginTop: 12, fontSize: 9, lineHeight: 1.35, padding: '0 4px' }}>
+          <div style={{ marginTop: 18, fontSize: 9, lineHeight: 1.35, padding: '0 4px' }}>
             SurtiMax y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
           </div>
         </div>
