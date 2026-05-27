@@ -38,9 +38,10 @@ export function QuotationDetail() {
   }
 
   const totalCotizado = quote.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-  const subtotal = totalCotizado / 1.15;
-  const iva = totalCotizado - subtotal;
-  const finalTotal = totalCotizado - discount;
+  const subtotal = totalCotizado * 0.85;
+  const finalTotal = Math.max(0, totalCotizado - discount);
+  const subtotal2 = Math.max(0, subtotal - discount);
+  const iva = finalTotal * 0.15;
   const emissionDate = quote.date && !Number.isNaN(new Date(quote.date).getTime()) ? quote.date : new Date().toISOString().slice(0, 10);
   const generatedPrefacturaNumber = quote.number?.trim() ? quote.number : `COT-${new Date(emissionDate).toISOString().slice(0, 10).replace(/-/g, '')}-${String(quote.id).slice(-4).padStart(4, '0')}`;
   const generatedClientCode = quote.clientCedula?.trim()
@@ -50,7 +51,7 @@ export function QuotationDetail() {
   const handleSaveDiscount = () => {
     const d = Math.max(0, parseFloat(tempDiscount) || 0);
     setDiscount(d);
-    updateQuotation(quote.id, { discount: d, finalTotal: totalCotizado - d });
+    updateQuotation(quote.id, { discount: d, finalTotal: Math.max(0, totalCotizado - d) });
     setEditingDiscount(false);
   };
 
@@ -217,7 +218,7 @@ export function QuotationDetail() {
                   <td style={bigTd}>{item.unitPrice.toFixed(2).replace('.', ',')}</td>
                   <td style={bigTd}>{discount > 0 ? `${((discount / totalCotizado) * 100).toFixed(2)}%` : '0,00%'}</td>
                   <td style={bigTd}>15%</td>
-                  <td style={bigTd}>{(item.quantity * item.unitPrice).toFixed(2).replace('.', ',')}</td>
+                  <td style={bigTd}>{(item.quantity * item.unitPrice * 0.85).toFixed(2).replace('.', ',')}</td>
                   <td style={bigTd}>{(item.quantity * item.unitPrice).toFixed(2).replace('.', ',')}</td>
                 </tr>
               ))}
@@ -231,19 +232,32 @@ export function QuotationDetail() {
           <div style={{ border: '1px solid #000', padding: '8px 10px', fontSize: 12 }}>
             <div style={sumRow}><span>SUBTOTAL</span><span>{subtotal.toFixed(2).replace('.', ',')}</span></div>
             <div style={sumRow}><span>DESCUENTO</span><span>{discount.toFixed(2).replace('.', ',')}</span></div>
-            <div style={sumRow}><span>SUBTOTAL 2</span><span>{(subtotal - discount).toFixed(2).replace('.', ',')}</span></div>
-            <div style={sumRow}><span>BASE IVA 15%</span><span>{(subtotal - discount).toFixed(2).replace('.', ',')}</span></div>
+            <div style={sumRow}><span>SUBTOTAL 2</span><span>{subtotal2.toFixed(2).replace('.', ',')}</span></div>
+            <div style={sumRow}><span>BASE IVA 15%</span><span>{subtotal2.toFixed(2).replace('.', ',')}</span></div>
             <div style={sumRow}><span>IVA 15%</span><span>{iva.toFixed(2).replace('.', ',')}</span></div>
             <div style={{ ...sumRow, fontWeight: 700 }}><span>TOTAL</span><span>{finalTotal.toFixed(2).replace('.', ',')}</span></div>
           </div>
         </div>
 
         <div className="print-keep print-footer" style={{ marginTop: 14 }}>
-          <div className="signature-section" style={{ fontSize: 11, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: 280, maxWidth: '70%' }}><div style={{ borderTop: '2px solid #000', paddingTop: 6 }}>RECIBÍ CONFORME</div></div>
+          <div
+            className="signature-section"
+            style={{
+              fontSize: 11,
+              textAlign: 'center',
+              display: 'flex',
+              justifyContent: 'center',
+              minHeight: '4.5cm',
+              alignItems: 'flex-end',
+              paddingTop: 8
+            }}
+          >
+            <div style={{ width: 320, maxWidth: '75%' }}>
+              <div style={{ borderTop: '2px solid #000', paddingTop: 8, textAlign: 'center' }}>RECIBÍ CONFORME</div>
+            </div>
           </div>
 
-          <div style={{ marginTop: 12, fontSize: 9, lineHeight: 1.35, padding: '0 4px' }}>
+          <div style={{ marginTop: 18, fontSize: 9, lineHeight: 1.35, padding: '0 4px' }}>
             SurtiMax y su distribuidor garantizan el adecuado tratamiento de sus datos personales conforme a la ley. Sus datos serán usados para procesar transacciones, enviar comunicaciones comerciales y gestionar la relación comercial.
           </div>
         </div>
