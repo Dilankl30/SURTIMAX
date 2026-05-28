@@ -137,10 +137,6 @@ export function AuthModal() {
                 <input value={loginPass} onChange={e => setLoginPass(e.target.value)} type="password" placeholder="••••••••" style={inp} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
               </Field>
 
-              <div style={{ backgroundColor: '#E3F2FD', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: '#1565C0', lineHeight: 1.7, border: '1px solid #BBDEFB' }}>
-                <strong>Admin inicial:</strong> admin@surtimax.com / admin123
-              </div>
-
               <button onClick={handleLogin} style={btn}>Ingresar a mi cuenta →</button>
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
